@@ -1,0 +1,29 @@
+# Flutter build files
+frontend_flutter/build/
+frontend_flutter/.dart_tool/
+frontend_flutter/.flutter-plugins
+frontend_flutter/.flutter-plugins-dependencies
+
+# Python virtual environment
+backend_python/venv/
+backend_python/__pycache__/
+
+# Environment files
+.env
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Python virtual environment
+Backend/venv/
+venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Flutter build
+build/
+.dart_tool/
+

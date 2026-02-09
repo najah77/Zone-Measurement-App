@@ -1,0 +1,32 @@
+[
+  {
+    "code": "AMP",
+    "name": "Ampicillin",
+    "sensitive_mm": 17,
+    "intermediate_mm": 14
+  },
+  {
+    "code": "CIP",
+    "name": "Ciprofloxacin",
+    "sensitive_mm": 21,
+    "intermediate_mm": 16
+  },
+  {
+    "code": "GEN",
+    "name": "Gentamicin",
+    "sensitive_mm": 15,
+    "intermediate_mm": 13
+  },
+  {
+    "code": "AK",
+    "name": "Amikacin",
+    "sensitive_mm": 17,
+    "intermediate_mm": 15
+  },
+  {
+    "code": "TE",
+    "name": "Tetracycline",
+    "sensitive_mm": 17,
+    "intermediate_mm": 15
+  }
+]
