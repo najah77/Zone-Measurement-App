@@ -1,0 +1,100 @@
+{
+  "analysis": {
+    "analysis_id": "caf10773-d57d-4a25-9575-90deeaf6fecb",
+    "status": "REQUIRES_MANUAL_REVIEW",
+    "algorithm_version": "zone-measurement-2.0.0",
+    "created_at": "2026-04-16 19:30:41.233705+00:00",
+    "image_filename": "simple.png",
+    "plate_detection": {
+      "center": {
+        "x": 400.0,
+        "y": 400.0
+      },
+      "radius_px": 346.3,
+      "clipped": false,
+      "clip_fraction": 0.0,
+      "method": "contour",
+      "warnings": []
+    },
+    "quality_report": {
+      "blur_score": 22.99,
+      "brightness": 197.1,
+      "contrast": 16.31,
+      "glare_fraction": 0.0086,
+      "clipped_plate": false,
+      "severe_skew": false,
+      "warnings": [
+        "Image appears blurry; recapture is recommended if measurements look wrong.",
+        "Low contrast may reduce zone detection confidence."
+      ],
+      "review_required": true
+    },
+    "calibration": {
+      "disc_diameter_mm": 6.0,
+      "average_disc_diameter_px": 44.98,
+      "mm_per_pixel": 0.133393,
+      "disc_count": 1,
+      "spread_px": 0.0,
+      "method": "median-disc-diameter",
+      "warnings": []
+    },
+    "results": [
+      {
+        "disc_id": "disc-1",
+        "index": 1,
+        "center": {
+          "x": 522.67,
+          "y": 262.77
+        },
+        "disc_radius_px": 22.49,
+        "disc_diameter_px": 44.98,
+        "disc_diameter_mm": 6.0,
+        "detected_code": "DO",
+        "final_code": "DO",
+        "label_confidence": 0.667,
+        "label_candidates": [
+          "P",
+          "DO"
+        ],
+        "label_engine": "tesseract-ocr",
+        "auto_diameter_px": 308.0,
+        "auto_diameter_mm": 41.09,
+        "corrected_diameter_mm": null,
+        "final_diameter_mm": 41.09,
+        "measurement_confidence": 0.861,
+        "overall_confidence": 0.774,
+        "source": "auto",
+        "status": "review_required",
+        "review_required": true,
+        "no_zone_fallback_used": false,
+        "warnings": [
+          "Zone edge varied across radial samples.",
+          "Disc label confidence is low; confirm the suggested code."
+        ],
+        "measurement_method": "radial-profile",
+        "calibration_mm_per_pixel": 0.133393,
+        "crop_image_base64": "iVBORw0KGgoAAAANSUhEUgAAAEwAAABMCAIAAABI9cZ8AAAB0UlEQVR4AeXBQYrYMAAEwe4vjf//hPGXFFgIBHJZ2bJ9UJVsQDYgG5ANyAZkA7IB2YBsQDYgG5ANyAZkA7IB2YC8ru1xHLxIHtaW/yQ5z5N/HMfBY+QZbfkrCb9wnidwHAeryWpt+ZGES87zPI6DdWSptkASblNZRNZpCyRhEZUVZIW2/EjCUud5HsfBPXJbWyAJj1G5QW5rm4Qnqdwg97QFkvAwlavkhrZAEl6hcolc1RZIwotU5slVbZPwLpV5cklbIAmvU5kkl7RNwhdUJsklbZPwBZVJMq8tkISPqMyQeW2T8B2VGTKvbRK+ozJD5rVNwndUZsi8tkn4jsoMmdc2Cd9RmSGT2gJJ+JTKr8m8MQafUpkh89om4TsqM2Re2yR8R2WGzGubhO+ozJB5bZPwHZUZMq9tEr6jMkMuGWPwEZVJcknbJHxBZZJc0jYJX1CZJFeNMXidyjy5qm0S3qUyT24YY/AilUvknjEGr1C5Sm4bY/AwlRvktrZJeJLKDbLCGIPHqNwj64wxWEplBVlqjMEiKovIamMMblNZR54xxuASldXkYWMMfkHlMfK6MYbKi2QDsgHZgGxANiAbkA3IBmQDsgHZgGxANiAbkA38AdYuk03CA9MfAAAAAElFTkSuQmCC",
+        "overlay_image_base64": "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4WEMqo10VC9evHj16tXFxQXQe3/79i3w2Wefff755wzff//95eVlrZXh97///ddff315efnxxx//4he/KKUAP/744z//8z9fXl6SZs/DGBarJVsrkrgPD2NQbaSjevHixatXry4uLoDe+9u3b4GLi4u///u/v7i4AP70pz+t1+sPP/wQ+PHHH3/zm9/83//9H/DBBx98+eWXtVbg3bt3//7v//6///u/pNnzMAbV1ntnO0US9+FhDKqNdFQvXrx49erVxcUF0Ht/+/YtwxdffPHpp58C6/UaKKUAEfGrX/2KyV/91V/95V/+ZSkF+Oqrr1arFWn2PIxBtfXe2U6RxNY8jEG1kY7txYsXr169uri4AHrvb9++Zfjkk09+8YtfAO/evVuv1x988AHw1VdfrVYrJj/5yU++/PLL58+fA//6r//63XffkU6BhzGott47WyiS2JqHMag20rG9ePHi1atXFxcXQO/97du3DJ9//vlnn30GvHv3Dnj+/DnwzTff/Pa3v728vGR4+fLl559/XkoBvvrqq9VqRToFHsag2nrvbKFIYmsexqDaSMf24sWLV69eXVxcAL33t2/fMvzDP/zDT37yE2C9XgOlFOCHH374p3/6JyZffPHFp59+ytB7f/v2LekUeBiDagN679ylSGJrHsag2kjH9uLFi1evXl1cXAC997dv3wI//elP/+7v/q6UAvzwww+Xl5cffvghsF6vv/766//3//4f8NFHH3355ZfPnj0D3r179y//8i8//vgj6RR4GINqA3rv3KVIYjsexqDaSDPw4sWLV69eXVxcAP/1X//17bff/tmf/dlf//VfP3v2jOHbb7/94YcfXr58yXB5efm73/3u8vLyL/7iLy4uLhi+++673/zmN+/evSOdCA9jUG29d+5SJLEdD2NQbaQZePHixatXry4uLrjOer3+t3/7t/V6/ctf/vL58+dcZ71e/8d//Me3335LOh0exqDagN47tyqS2I6HMag20gz8+Z//+S9/+ctSCu959+7dV1999T//8z/AJ5988rd/+7cXFxdcdXl5+fXXX//+978nnRQPY1BtQO+dWxVJbMfDGFQbaR4+/fTTn//856UUJj/++GNEvH379g9/+MPl5SXw7Nmzjz/++LPPPvvoo49KKcB6vf7+++9Xq9U333zz448/kk6KhzGoNobeOzcrktiOhzGoNtJsfPDBBxcXF6UUhj/+8Y/v3r3jOhcXF8+Gy8vLP/7xj6TT5GEMqo2h987NiiS24GEMqo2U0lF5GINqA3rv3KxIYgsexqDaSCkdlYcxqDaG3js3KJLYgocxqDZSSkflYQyqjaH3zg2KJLbgYQyqjZTSUXkYg2pj0nvnOkUSW/AwBtVGOjVuzg3URDo1Hsag2pj03rlOkcQWPIxBtZFOgZtzT2oinQIPY1BtTHrvXKdIYgsexqDaSPPm5jyCmkjz5mEMqo0NvXfeUyRxFw9jUG2kGXNzbrBmzXUKheuoiTRjHsag2pj03nlPkcRdPIxBtZHmys25as2arRUKV6mJNFcexqDa2NB756oiibt4GINqI82Pm3PVmjUPUihcpSbS/HgYg2pjQ++dq4ok7uJhDKqNNDNuzoY1ax6tUNigJtLMeBiDamND752riiTu4mEMqo00J27OhjVrdqRQ2KAm0px4GINq46reOxuKJO7iYQyqjTQbbs5kzZpdKxQ2qIk0Gx7GoNq4qvfOhiKJu3gYg2ojzYabM1mzZg8KhYmaSLPhYQyqjat672wokriLhzGoNtI8uDmTNWv2plCYqIk0Dx7GoNp4T++dSZHEXTyMQbWRZsDNmaxZs2eFwkRNpBnwMAbVxnt670yKJG7lYQyqjTQPbs6wZs1BFAqDmkjz4GEMqo339N4ZiiRu5WEMqo00A27OZM2agygUJmoizYCHMag23tN7ZyiSuJWHMag20gy4OcOaNQdUKAxqIs2AhzGoNt7Te2cokriVhzGoNtKxuTmTNWsOqFCYqIl0bB7GoNq4Tu8dKJK4lYcxqDbSsbk5w5o1B1coDGoiHZuHMag2rtN7B4okbuVhDKqNdGxuzrBmzcEVCoOaSMfmYQyqjev03oEiiVt5GINqIx2bmzOsWXNwhcKgJtKxeRiDauMGvfciiVt5GINqIx2VmzNZs+bgCoWJmkhH5WEMqo0b9N6LJG7lYQyqjXRUbs6wZs2RFAqDmkhH5WEMqo0b9N6LJG7lYQyqjXRUbs6wZs2RFAqDmkhH5WEMqo2bFUncysMYVBvpqNycYc2aIykUBjWRjsrDGFQbNyuSuJWHMag20lG5OcOaNUdSKAxqIh2VhzGoNm5WJHErD2NQbaSjcnOGNWuOpFAY1EQ6Kg9jUG3crEjiVh7GoNpIR+XmDGvWHEmhMKiJdFQexqDauFmRxK08jEG1kY7KzRnWrDmSQmFQE+moPIxBtXGzIolbeRiDaiMdlZszrFlzJIXCoCbSUXkYg2rjZkUSt/IwBtVGOjY3Z1iz5uAKhUFNpGPzMAbVxs2KJG7lYQyqjXRsbs6wZs3BFQqDmkjH5mEMqo2bFUncysMYVBvp2NycYc2agysUBjWRjs3DGFQbNyuSuJWHMag20rG5OZM1aw6oUJioiXRsHsag2rhZkcStPIxBtZFmwM0Z1qw5oEJhUBNpBjyMQbVxsyKJW3kYg2ojzYCbM1mz5iAKhYmaSDPgYQyqjZsVSdzKwxhUG2ke3JxhzZqDKBQGNZHmwcMYVBs3K5K4i4cxqDbSDLg5kzVr9qxQmKiJNAMexqDauFWRxF08jEG1kebBzZmsWbM3hcJETaR58DAG1catiiTu4mEMqo00G27OZM2aPSgUJmoizYaHMag2blUkcRcPY1BtpNlwcyZr1uxaobBBTaTZ8DAG1catiiTu4mEMqo00J27OhjVrdqRQ2KAm0px4GINq41ZFEnfxMAbVRpoZN2fDmjWPVihsUBNpZjyMQbVxqyKJu3gYg2ojzY+bc9WaNQ9SKFylJtL8eBiDauNWRRJ38TAG1UaaKzfnqjVrtlYoXKUm0lx5GINq41ZFEnfxMAbVRpoxN+cGa9Zcp1C4jppIM+ZhDKqNWxVJbMHDGFQbad7cnEdQE2nePIxBtXGXIokteBiDaiOdAjfnntREOgUexqDauEuRxBY8jEG1kU6Nm3MDNZFOjYcxqDbuUiSxBQ9jUG2klI7KwxhUG3cpktiChzGoNlJKR+VhDKqNuxRJbMHDGFQbKaWj8jAG1cZdiiS24GEMqo2U0lF5GINq4y5FEtvxMAbVRkrpSDyMQbWxhSKJ7XgYg2ojpXQkHsag2thCkcR2PIxBtZFSOhIPY1BtbKFIYjsexqDaSCkdiYcxqDa2UCSxHQ9jUG2klI7EwxhUG1soktiahzGoNlJKB+dhDKqN7RRJbM3DGFQbKaWD8zAG1cZ2iiS25mEMqo2U0sF5GINqYztFElvzMAbVRkrp4DyMQbWxnSKJ+/AwBtVGSumAPIxBtbG1Ion78DAG1UZK6YA8jEG1sbUiifvwMAbVRkrpgDyMQbWxtSKJ+/AwBtVGSumAPIxBtbG1Iol78jAG1UZK6SA8jEG1cR9FEvfkYQyqjZTSQXgYg2rjPook7snDGFQbKaWD8DAG1cZ9FEncn4cxqDZSSnvmYQyqjXsqkrg/D2NQbaSU9szDGFQb91QkcX8exqDaSCntmYcxqDbuqUji/jyMiWojpbQ3HsZEtXFPRRIP4mEMqo2U0t54GINq4/6KJB7EwxhUGymlvfEwBtXG/RVJPIiHMVFtpJT2wMOYqDbur0jioTyMQbWRUtoDD2NQbTxIkcRDeRiDaiOltAcexqDaeJAiiYfyMCaqjZTSTnkYE9XGgxRJPIKHMag2Uko75WEMqo2HKpJ4BA9jUG2klHbKwxhUGw9VJPE4Hsag2kgp7YiHMag2HqFI4nE8jEG1kVLaEQ9jUG08QpHE43gYE9VGSunRPIyJauMRiiQezcMYVBsppUfzMAbVxuMUSTyahzFRbaSUHsHDmKg2HqdIYhc8jEG1kVJ6BA9jUG08WpHELngYg2ojpfQIHsag2ni0Iokd8TAG1UZK6UE8jEG1sQtFEjviYQyqjZTSg3gYg2pjF4okdsTDGFQbKaUH8TAG1cYuFEnsjocxqDZSSvfkYQyqjR0pktgdD2NQbaSU7snDGFQbO1IksVMexqDaSCltzcMYVBu7UySxUx7GoNpIKW3NwxhUG7tTJLFrHsag2kgpbcHDGFQbO1UksWsexqDaSCltwcMYVBs7VSSxBx7GoNpIKd3KwxhUG7tWJLEHHsag2kgp3crDGFQbu1YksR8exqDaSCndwMMYVBt7UCSxHx7GRLWRUnqPhzFRbexBkcTeeBiDaiOl9B4PY1Bt7EeRxN54GBPVRkppg4cxUW3sR5HEPnkYE9VGSmnwMCaqjb0pktgnD2Oi2kgpDR7GRLWxN0USe+ZhTFQbKT15HsZEtbFPRRL752FMVBspPWEexkS1sWdFEvvnYUxUGyk9YR7GRLWxZ0USB+FhTFQbKT1JHsZEtbF/RRKH4mFMVBspPTEexkS1cRBFEofiYUxUGyk9MR7GRLVxEEUSB+RhTFQbKT0ZHsZEtXEoRRKH5WEMqo2UngwPY1BtHFCRxGF5GBPVRkpPgIcxUW0cUJHEwXkYg2ojpSfAwxhUG4dVJHEMHsag2kjprHkYg2rj4IokjsTDGFQbKZ0pD2NQbRxDkcSReBgT1UZKZ8fDmKg2jqFI4ng8jIlqI6Uz4mFMVBtHUiRxVB7GRLWR0lnwMCaqjeMpkjg2D2NQbaR0FjyMQbVxVEUSx+ZhTFQbKZ04D2Oi2jiqIokZ8DAmqo2UTpaHMVFtHFuRxDx4GBPVRkonyMOYqDZmoEhiHjyMDaqNlE6Kh7FBtTEDRRKz4WFsUG2kdCI8jA2qjXkokpgTD2ODaiOl2fMwNqg2ZqNIYmY8jIlqI6XZ8zAmqo05KZKYHw9jotpIacY8jIlqY2aKJGbJw5ioNlKaJQ9jotqYnyKJufIwJqqNlGbGw5ioNmapSGLGPIyJaiOl2fAwJqqNuSqSmDcPY6LaSGkGPIyJamPGiiRmz8OYqDZSOioPY6LamLciidnzMDaoNlI6Eg9jg2pj3ookToGHsUG1kdLBeRgbVBuzVyRxIjyMDaqNlA7Iw5ioNk5EkcRJ8TAmqo2UDsLDmKg2TkeRxKnxMCaqjZT2zMOYqDZOSpHECfIwJqqNlPbDw9ig2jg1RRKnycPYoNpIaac8jA2qjRNUJHGyPIwNqo2UdsTD2KDaOE1FEqfMw9ig2kjp0TyMDaqNk1UkceI8jA2qjZQewcPYoNo4ZUUSp8/DuEq1kdL9eRgbVBsnrkjiLHgYV6k2Utqah7FBtXEWiiTOiIexQbWR0hY8jA2qjXNRJHFePIwNqo2UbuVhbFBtnJEiibPjYVyl2kjpPR7GBtXG2SmSOFMexgbVRkobPIwNqo1zVCRxvjyMDaqNlAYPY4Nq40wVSZw1D+Mq1UZ6wjyMDaqNs1Yk8QR4GBtUG+np8TCuUm2cuyKJp8HDuEq1kZ4MD+Mq1cYTUCTxlHgYG1Qb6dx5GFepNp6MIoknxsO4SrWRzpSHcZVq4ykpkniSPIwNqo10XjyMq1QbT0+RxBPmYWxQbaSz4GFcpdp4kooknjYP4yrVRjpZHsZVqo0nrEgigYdxlWojnRQP4z2qjaetSCJNPIyrVBtp9jyM96g2EhRJpKs8jA2qjTRjHsZVqo00KZJI1/EwNqg20sx4GFepNtJVRRLpZh7GBtVGmgEP4yrVRrpOkUS6i4dxlWojHZyH8R7VRrpZkUTajodxlWoj7Z+HcR3VRrpLkUTamofxHtVG2g8P4zqqjbSdIol0fx7Ge1QbaUc8jPeoNtI9FUmkh/Iw3qPaSA/lYVxHtZEepEgiPZqHcR3VRtqOh3Ed1UZ6hCKJtCMexg1UG+k6HsZ1VBtpF4ok0k55GDdTbSTwMG6g2ki7UySR9sPDuJlq44nxMG6m2kh7UCSR9szDuJVq40x5GLdSbaR9KpJIh+Jh3EW1ceI8jFupNtKhFEmkY/AwtqDamD0PYwuqjXRwRRLp2DyM+1BtHImHcR+qjXRURRJpTjyMR1BtPJqH8QiqjTQbRRJpxjyM2VNtpLkqkkinxsM4EtVGOilFEumMeBiPptpI56JIIqV0vookUkrnq0gipXS+iiRSSuerSCKldL6KJFJK56tIIqV0vookUkrnq0gipXS+iiRSSufr/wOcfu38irxXFQAAAABJRU5ErkJggg==",
+        "operator_note": null
+      }
+    ],
+    "summary": {
+      "total_discs": 1,
+      "review_required_count": 1,
+      "corrected_count": 0,
+      "failed_count": 0,
+      "auto_count": 0
+    },
+    "warnings": [
+      "Image appears blurry; recapture is recommended if measurements look wrong.",
+      "Low contrast may reduce zone detection confidence."
+    ],
+    "debug_artifacts": {}
+  },
+  "storage": {
+    "image_path": "C:\\Users\\najah\\Desktop\\Zone_Measurement_App\\Backend\\data\\analysis_runs\\caf10773-d57d-4a25-9575-90deeaf6fecb\\original_upload.bin",
+    "image_filename": "simple.png"
+  },
+  "updated_at": "2026-04-16 19:30:41.233705+00:00",
+  "operator_id": null
+}

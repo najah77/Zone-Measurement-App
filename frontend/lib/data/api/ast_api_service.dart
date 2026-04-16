@@ -1,42 +1,72 @@
 import 'dart:convert';
+
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
+
+import '../../core/models/analysis_result.dart';
 import '../models/ast_result_model.dart';
 
 class AstApiService {
-  // Configurable base URL (can be moved to environment variables later)
-  static const String _baseUrl = 'http://127.0.0.1:8000'; 
-  
-  Future<List<AstResultModel>> analyzeImage(String imagePath) async {
+  static const String _baseUrl = 'http://127.0.0.1:8000';
+
+  Future<AnalysisSessionModel> analyzeImage(String imagePath) async {
     final uri = Uri.parse('$_baseUrl/api/analyze');
-    final request = http.MultipartRequest('POST', uri);
-    
-    // Determine content type
-    final mimeType = imagePath.toLowerCase().endsWith('.png') 
-        ? MediaType('image', 'png') 
+    final request = http.MultipartRequest('POST', uri)
+      ..fields['include_debug_artifacts'] = 'true';
+
+    final mimeType = imagePath.toLowerCase().endsWith('.png')
+        ? MediaType('image', 'png')
         : MediaType('image', 'jpeg');
 
-    // Add image file
-    final file = await http.MultipartFile.fromPath(
-      'image', 
-      imagePath,
-      contentType: mimeType,
+    request.files.add(
+      await http.MultipartFile.fromPath(
+        'image',
+        imagePath,
+        contentType: mimeType,
+      ),
     );
-    request.files.add(file);
-    
-    try {
-      final streamedResponse = await request.send().timeout(const Duration(seconds: 30));
-      final response = await http.Response.fromStream(streamedResponse);
-      
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> data = json.decode(response.body);
-        final List<dynamic> results = data['results'] as List;
-        return results.map((json) => AstResultModel.fromJson(json)).toList();
-      } else {
-        throw Exception('Server returned ${response.statusCode}: ${response.body}');
-      }
-    } catch (e) {
-      throw Exception('Failed to analyze image: $e');
+
+    final streamedResponse =
+        await request.send().timeout(const Duration(seconds: 60));
+    final response = await http.Response.fromStream(streamedResponse);
+    return _parseSessionResponse(response);
+  }
+
+  Future<AnalysisSessionModel> saveReview(AnalysisSessionModel session) async {
+    final uri =
+        Uri.parse('$_baseUrl/api/analysis/${session.analysisId}/review');
+    final payload = {
+      'discs': session.results
+          .map(
+            (result) => {
+              'disc_id': result.discId,
+              'corrected_code': result.finalCode != result.detectedCode
+                  ? result.finalCode
+                  : null,
+              'corrected_diameter_mm': result.correctedDiameterMm,
+              'operator_note': result.operatorNote,
+              'confirmed': !result.reviewRequired,
+            },
+          )
+          .toList(),
+    };
+
+    final response = await http
+        .post(
+          uri,
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(payload),
+        )
+        .timeout(const Duration(seconds: 30));
+    return _parseSessionResponse(response);
+  }
+
+  AnalysisSessionModel _parseSessionResponse(http.Response response) {
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final Map<String, dynamic> data =
+          json.decode(response.body) as Map<String, dynamic>;
+      return AnalysisSessionModel.fromJson(data);
     }
+    throw Exception('Server returned ${response.statusCode}: ${response.body}');
   }
 }

@@ -4,8 +4,13 @@ opencv-python
 numpy
 python-multipart
 pydantic
+python-dotenv
+scikit-image
+scipy
 torch
 torchvision
-scikit-image
+ultralytics
+openai
+google-genai
+pillow
 pytesseract
-scipy

@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:io';
@@ -25,9 +24,9 @@ class _ImageUploadScreenState extends State<ImageUploadScreen> {
       final viewModel = context.read<ImageUploadViewModel>();
       String? error;
       if (args != null && args['isCamera'] == true) {
-         error = await viewModel.pickFromCamera();
+        error = await viewModel.pickFromCamera();
       } else if (args != null && args['isCamera'] == false) {
-         error = await viewModel.pickFromGallery();
+        error = await viewModel.pickFromGallery();
       }
 
       if (context.mounted && error != null) {
@@ -54,9 +53,10 @@ class _ImageUploadScreenState extends State<ImageUploadScreen> {
                 width: double.infinity,
                 decoration: BoxDecoration(
                   color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(AppConstants.cardBorderRadius),
+                  borderRadius:
+                      BorderRadius.circular(AppConstants.cardBorderRadius),
                   border: Border.all(
-                    color: AppColors.border, 
+                    color: AppColors.border,
                     width: 2,
                   ),
                 ),
@@ -65,7 +65,8 @@ class _ImageUploadScreenState extends State<ImageUploadScreen> {
                         fit: StackFit.expand,
                         children: [
                           ClipRRect(
-                            borderRadius: BorderRadius.circular(AppConstants.cardBorderRadius - 2),
+                            borderRadius: BorderRadius.circular(
+                                AppConstants.cardBorderRadius - 2),
                             child: Image.file(
                               File(viewModel.selectedImage!.path),
                               fit: BoxFit.cover,
@@ -76,7 +77,8 @@ class _ImageUploadScreenState extends State<ImageUploadScreen> {
                             right: 8,
                             child: IconButton(
                               onPressed: viewModel.clearImage,
-                              icon: const Icon(Icons.close, color: Colors.white),
+                              icon:
+                                  const Icon(Icons.close, color: Colors.white),
                               style: IconButton.styleFrom(
                                 backgroundColor: Colors.black54,
                               ),
@@ -96,6 +98,15 @@ class _ImageUploadScreenState extends State<ImageUploadScreen> {
                           Text(
                             'No Image Selected',
                             style: AppTextStyles.bodyMedium,
+                          ),
+                          const SizedBox(height: 12),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 24),
+                            child: Text(
+                              'Center the full plate, avoid glare, and keep the printed disc labels sharp enough to read.',
+                              style: AppTextStyles.bodyMedium,
+                              textAlign: TextAlign.center,
+                            ),
                           ),
                         ],
                       ),
@@ -127,7 +138,7 @@ class _ImageUploadScreenState extends State<ImageUploadScreen> {
                     label: 'Gallery',
                     onTap: () async {
                       final error = await viewModel.pickFromGallery();
-                       if (context.mounted && error != null) {
+                      if (context.mounted && error != null) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text(error)),
                         );
@@ -139,13 +150,37 @@ class _ImageUploadScreenState extends State<ImageUploadScreen> {
             ),
             const SizedBox(height: 24),
 
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.primaryLight.withOpacity(0.18),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.primaryLight),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Capture checklist', style: AppTextStyles.titleMedium),
+                  const SizedBox(height: 8),
+                  Text('1. Keep the entire plate inside frame.',
+                      style: AppTextStyles.bodyMedium),
+                  Text('2. Reduce reflection and heavy shadows.',
+                      style: AppTextStyles.bodyMedium),
+                  Text('3. Retake the image if labels look blurred.',
+                      style: AppTextStyles.bodyMedium),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+
             // Proceed Button
             PrimaryButton(
               text: AppConstants.analyze,
               isLoading: viewModel.isLoading,
               onPressed: viewModel.selectedImage != null
                   ? () => viewModel.proceedToAnalysis(context)
-                  : null, 
+                  : null,
             ),
             const SizedBox(height: 16),
           ],
@@ -183,4 +218,3 @@ class _SelectionButton extends StatelessWidget {
     );
   }
 }
-

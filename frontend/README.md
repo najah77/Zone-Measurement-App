@@ -1,16 +1,17 @@
-# ast_analyzer
+# Frontend
 
-A new Flutter project.
+Flutter client for capture, review, correction, and final AST result presentation.
 
-## Getting Started
+## Run
+- `flutter pub get`
+- `flutter run`
 
-This project is a starting point for a Flutter application.
+## Main Screens
+- Home
+- Upload or capture
+- Analysis review
+- Final results table
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Notes
+- The review screen is correction-first: label confirmation and diameter adjustment happen before the final table.
+- The final table keeps auto, corrected, and final values separate.

@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-def extract_disc_roi(image: np.ndarray, x: float, y: float, r: float, expand_ratio: float = 0.15) -> np.ndarray:
+def extract_disc_roi(image: np.ndarray, x: float, y: float, r: float, expand_ratio: float = 0.70) -> np.ndarray:
     """
     Crops a circular ROI for the disc, masking out the background.
     

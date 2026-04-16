@@ -43,3 +43,40 @@ def preprocess_image(image: np.ndarray) -> dict:
         "enhanced": enhanced,
         "binary": binary
     }
+
+def preprocess_plate(image: np.ndarray) -> np.ndarray:
+    """
+    Robust preprocessing pipeline for real-world AST images.
+    Enhances contrast, normalizes lighting, and preserves edges.
+    """
+    if image is None or image.size == 0:
+        return image
+        
+    # 1. Convert to LAB color space
+    if len(image.shape) == 3:
+        lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+        l, a, b = cv2.split(lab)
+    else:
+        l = image
+        a = None
+        b = None
+
+    # 2. Apply CLAHE to L channel to handle uneven lighting
+    clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8,8))
+    cl = clahe.apply(l)
+
+    # 3. Merge channels back
+    if len(image.shape) == 3:
+        merged = cv2.merge((cl, a, b))
+        enhanced = cv2.cvtColor(merged, cv2.COLOR_LAB2BGR)
+    else:
+        enhanced = cl
+
+    # 4. Apply bilateral filter to preserve edges but smooth textures like bacterial lawns
+    # d=9, sigmaColor=75, sigmaSpace=75 are standard robust values
+    filtered = cv2.bilateralFilter(enhanced, 9, 75, 75)
+    
+    # 5. Mild Gaussian blur to reduce high-frequency noise
+    filtered = cv2.GaussianBlur(filtered, (3, 3), 0)
+
+    return filtered

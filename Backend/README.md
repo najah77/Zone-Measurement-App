@@ -1,52 +1,18 @@
-# AST Analyzer Backend (Phase 3)
+# Backend
 
-FastAPI backend for Antibiotic Sensitivity Test (AST) Analyzer.
+FastAPI backend for AST plate analysis.
 
-## Tech Stack
-- Python 3.10+
-- FastAPI
-- Uvicorn
-- OpenCV (opencv-python)
-- NumPy
-- Pydantic
+## Run
+- `venv\Scripts\python.exe -m uvicorn app.main:app --reload`
 
-## Setup
+## Endpoints
+- `POST /api/analyze`
+- `GET /api/analysis/{analysis_id}`
+- `POST /api/analysis/{analysis_id}/review`
+- `GET /api/analysis/{analysis_id}/export`
 
-1.  **Create and Activate Virtual Environment (Recommended):**
-    ```bash
-    # Windows
-    python -m venv venv
-    .\venv\Scripts\activate
-    ```
+## Storage
+- Analysis records are stored under `Backend/data/analysis_runs`
 
-2.  **Install dependencies:**
-    ```bash
-    pip install -r requirements.txt
-    ```
-
-3.  **Run the server:**
-    ```bash
-    uvicorn app.main:app --reload
-    ```
-
-3. Access API docs:
-   - Swagger UI: http://127.0.0.1:8000/docs
-   - ReDoc: http://127.0.0.1:8000/redoc
-
-## API Endpoints
-
-### POST /analyze
-Accepts an image file (multipart/form-data) and returns detected antibiotic discs and zone diameters.
-
-**Request:**
-- `image`: File (JPEG/PNG)
-
-**Response:**
-```json
-{
-  "results": [
-    { "code": "AMP", "diameter": 18.5 },
-    { "code": "CIP", "diameter": 14.2 }
-  ]
-}
-```
+## Tests
+- `venv\Scripts\python.exe -m unittest discover -s tests -v`
