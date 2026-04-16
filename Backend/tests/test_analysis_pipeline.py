@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import sys
 import unittest
 from pathlib import Path
@@ -16,12 +17,15 @@ if str(TESTS_DIR) not in sys.path:
 from app.main import app
 from app.ml.ocr_classifier import predict_disc_class_ocr
 from app.models.schemas import DiscMeasurement, Point
+from app.services.ast_processor import process_ast_image
 from app.services.expert_engine import validate_results
 from app.utils.calibration import build_calibration, pixels_to_mm
 from app.utils.disc_detector import validate_disc_geometry
 from app.utils.measurement import apply_no_zone_rule, calculate_inhibition_result
 from app.utils.zone_detector import measure_zone
 from synthetic_plate import DiscSpec, encode_png, make_label_crop, make_plate_image
+
+REAL_SAMPLE_PATH = ROOT / "data" / "analysis_runs" / "03315fd2-d572-4120-9813-57e6919fcada" / "original_upload.bin"
 
 
 class GeometryAndNormalizationTests(unittest.TestCase):
@@ -159,6 +163,23 @@ class RegressionFixtureTests(unittest.TestCase):
         self.assertGreater(lzd_mm, 30.0)
         self.assertLess(cip_mm, 30.0)
         self.assertLess(amp_mm, 30.0)
+
+    @unittest.skipUnless(REAL_SAMPLE_PATH.exists(), "Real client sample fixture is not available in this workspace.")
+    def test_real_sample_plate_keeps_lzd_above_thirty_mm(self) -> None:
+        result = asyncio.run(
+            process_ast_image(
+                REAL_SAMPLE_PATH.read_bytes(),
+                image_filename="sample.jpeg",
+                include_debug_artifacts=False,
+            )
+        )
+        rows = {item.final_code: item.final_diameter_mm for item in result.results}
+        self.assertIn("LZD", rows)
+        self.assertGreater(rows["LZD"], 30.0)
+        for code, diameter in rows.items():
+            if code == "LZD":
+                continue
+            self.assertLess(diameter, 30.0, msg=f"{code} unexpectedly measured {diameter} mm")
 
 
 if __name__ == "__main__":

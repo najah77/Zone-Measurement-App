@@ -58,6 +58,66 @@ def _merge_similar_discs(discs: Sequence[DiscCircle]) -> List[DiscCircle]:
     return merged
 
 
+def _refine_disc_radius(image: np.ndarray, disc: DiscCircle) -> DiscCircle:
+    x, y, radius = disc
+    if radius <= 0:
+        return disc
+
+    h, w = image.shape[:2]
+    roi_radius = int(max(radius * 1.6, radius + 18))
+    x1 = max(0, int(round(x)) - roi_radius)
+    y1 = max(0, int(round(y)) - roi_radius)
+    x2 = min(w, int(round(x)) + roi_radius)
+    y2 = min(h, int(round(y)) + roi_radius)
+    roi = image[y1:y2, x1:x2]
+    if roi.size == 0:
+        return disc
+
+    gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY) if roi.ndim == 3 else roi
+    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+    local_center = (roi.shape[1] / 2.0, roi.shape[0] / 2.0)
+    best_radius = float(radius)
+    best_score = float("-inf")
+
+    for percentile in (90, 92, 94):
+        threshold_value = int(np.percentile(blurred, percentile))
+        _, binary = cv2.threshold(blurred, threshold_value, 255, cv2.THRESH_BINARY)
+        binary = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, np.ones((5, 5), dtype=np.uint8))
+        binary = cv2.morphologyEx(binary, cv2.MORPH_OPEN, np.ones((3, 3), dtype=np.uint8))
+        contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        for contour in contours:
+            area = cv2.contourArea(contour)
+            if area < np.pi * (radius * 0.22) ** 2:
+                continue
+            perimeter = cv2.arcLength(contour, True)
+            if perimeter <= 0:
+                continue
+            circularity = float((4.0 * np.pi * area) / (perimeter * perimeter))
+            (cx, cy), refined_radius = cv2.minEnclosingCircle(contour)
+            center_offset = float(np.hypot(cx - local_center[0], cy - local_center[1]))
+            if center_offset > radius * 0.75:
+                continue
+            if not (radius * 0.45 <= refined_radius <= radius * 0.95):
+                continue
+
+            contour_mask = np.zeros_like(gray)
+            cv2.drawContours(contour_mask, [contour], -1, 255, -1)
+            mean_brightness = float(np.mean(gray[contour_mask > 0])) if np.any(contour_mask > 0) else 0.0
+            score = (circularity * 80.0) + (mean_brightness * 0.25) - (center_offset * 2.5) - abs(refined_radius - radius * 0.72) * 1.1
+            if score > best_score:
+                best_score = score
+                best_radius = float(refined_radius)
+
+    if best_score == float("-inf"):
+        return disc
+    return float(x), float(y), best_radius
+
+
+def refine_detected_discs(image: np.ndarray, discs: Sequence[DiscCircle]) -> List[DiscCircle]:
+    return [_refine_disc_radius(image, disc) for disc in discs]
+
+
 def _detect_with_hough(gray: np.ndarray) -> List[DiscCircle]:
     min_radius = max(8, int(min(gray.shape[:2]) * 0.012))
     max_radius = max(min_radius + 5, int(min(gray.shape[:2]) * 0.05))
@@ -145,5 +205,6 @@ def detect_discs(image: np.ndarray) -> List[DiscCircle]:
         if baseline_radius * 0.7 <= disc[2] <= baseline_radius * 1.45
     ]
 
+    filtered = refine_detected_discs(image, filtered)
     filtered = sorted(filtered, key=lambda disc: (round(disc[1] / 40), disc[0]))
     return filtered[: settings.MAX_DISCS]

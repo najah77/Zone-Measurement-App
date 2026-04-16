@@ -18,6 +18,7 @@ from app.models.schemas import (
     Point,
     QualityReport,
 )
+from app.services.panel_resolver import apply_standard_panel_resolution
 from app.utils.calibration import build_calibration, pixels_to_mm
 from app.utils.disc_detector import detect_discs
 from app.utils.disc_roi import extract_disc_roi
@@ -129,10 +130,12 @@ def hybrid_analysis_pipeline(
             zone_diameter_px=auto_diameter_px,
             disc_diameter_px=disc_diameter_px,
             mm_per_pixel=calibration.mm_per_pixel,
+            no_zone_detected=bool(zone_result["no_zone_fallback_used"]),
         )
-        auto_diameter_mm = apply_no_zone_rule(auto_diameter_mm)
+        if bool(zone_result["no_zone_fallback_used"]):
+            auto_diameter_mm = apply_no_zone_rule(auto_diameter_mm)
 
-        crop = extract_disc_roi(image, x, y, radius)
+        crop = extract_disc_roi(image, x, y, radius, expand_ratio=0.24, mask_scale=0.8)
         label_prediction = predict_disc_class_ocr(crop)
         detected_code = str(label_prediction.get("code", "UNKNOWN")).upper()
         label_confidence = float(label_prediction.get("confidence", 0.0))
@@ -193,6 +196,7 @@ def hybrid_analysis_pipeline(
         result.index = index
         result.disc_id = f"disc-{index}"
 
+    apply_standard_panel_resolution(results, image.shape)
     summary = _summarize(results)
     plate_overlay = _build_plate_overlay(image, results)
     debug_artifacts: Dict[str, object] = {}

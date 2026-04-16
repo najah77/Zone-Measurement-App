@@ -1,0 +1,60 @@
+{
+  "analysis": {
+    "analysis_id": "f84b0331-8d1b-45a1-a49a-8a380f10e63b",
+    "status": "FAILED",
+    "algorithm_version": "zone-measurement-2.0.0",
+    "created_at": "2026-04-16 21:02:39.422565+00:00",
+    "image_filename": "NAOTOEEEEEEEIEE_example.png",
+    "plate_detection": {
+      "center": {
+        "x": 66.0,
+        "y": 66.0
+      },
+      "radius_px": 45.0,
+      "clipped": false,
+      "clip_fraction": 0.0,
+      "method": "contour",
+      "warnings": []
+    },
+    "quality_report": {
+      "blur_score": 4307.1,
+      "brightness": 109.55,
+      "contrast": 101.95,
+      "glare_fraction": 0.0,
+      "clipped_plate": false,
+      "severe_skew": false,
+      "warnings": [],
+      "review_required": false
+    },
+    "calibration": {
+      "disc_diameter_mm": 6.0,
+      "average_disc_diameter_px": 0.0,
+      "mm_per_pixel": 1.0,
+      "disc_count": 0,
+      "spread_px": 0.0,
+      "method": "median-disc-diameter",
+      "warnings": [
+        "No discs available for calibration; using 1.0 mm/px fallback."
+      ]
+    },
+    "results": [],
+    "summary": {
+      "total_discs": 0,
+      "review_required_count": 0,
+      "corrected_count": 0,
+      "failed_count": 1,
+      "auto_count": 0
+    },
+    "warnings": [
+      "No discs available for calibration; using 1.0 mm/px fallback.",
+      "No discs were detected automatically."
+    ],
+    "debug_artifacts": {}
+  },
+  "storage": {
+    "image_path": "C:\\Users\\najah\\Desktop\\Zone_Measurement_App\\Backend\\data\\analysis_runs\\f84b0331-8d1b-45a1-a49a-8a380f10e63b\\original_upload.bin",
+    "image_filename": "NAOTOEEEEEEEIEE_example.png"
+  },
+  "updated_at": "2026-04-16 21:02:39.422999+00:00",
+  "operator_id": null
+}
