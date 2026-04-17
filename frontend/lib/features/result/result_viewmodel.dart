@@ -25,6 +25,8 @@ class ResultItem {
   final String status;
   final List<String> warnings;
   final bool noZoneFallbackUsed;
+  final String labelConfidenceTier;
+  final String labelSelectionReason;
 
   ResultItem({
     required this.rowNumber,
@@ -38,7 +40,13 @@ class ResultItem {
     required this.status,
     required this.warnings,
     required this.noZoneFallbackUsed,
+    required this.labelConfidenceTier,
+    required this.labelSelectionReason,
   });
+
+  bool get labelNeedsConfirmation =>
+      labelConfidenceTier != 'high_confidence_exact' ||
+      status == 'review_required';
 
   String get interpretationText {
     switch (interpretation) {
@@ -102,6 +110,8 @@ class ResultViewModel extends ChangeNotifier {
             status: result.status,
             warnings: result.warnings,
             noZoneFallbackUsed: result.noZoneFallbackUsed,
+            labelConfidenceTier: result.labelConfidenceTier,
+            labelSelectionReason: result.labelSelectionReason,
           );
         }),
       );

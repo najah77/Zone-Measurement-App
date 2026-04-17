@@ -4,7 +4,14 @@ class AnalysisResult {
   final String detectedCode;
   final String finalCode;
   final double labelConfidence;
+  final String labelConfidenceTier;
   final List<String> labelCandidates;
+  final List<String> whitelistCandidatesConsidered;
+  final String labelDecisionSource;
+  final String labelSelectionReason;
+  final String rawOcrText;
+  final String normalizedOcrText;
+  final String? layoutSuggestion;
   final double autoDiameterPx;
   final double autoDiameterMm;
   final double? correctedDiameterMm;
@@ -26,7 +33,14 @@ class AnalysisResult {
     required this.detectedCode,
     required this.finalCode,
     required this.labelConfidence,
+    required this.labelConfidenceTier,
     required this.labelCandidates,
+    required this.whitelistCandidatesConsidered,
+    required this.labelDecisionSource,
+    required this.labelSelectionReason,
+    required this.rawOcrText,
+    required this.normalizedOcrText,
+    this.layoutSuggestion,
     required this.autoDiameterPx,
     required this.autoDiameterMm,
     required this.correctedDiameterMm,
@@ -48,6 +62,9 @@ class AnalysisResult {
       detectedCode != finalCode ||
       source == 'manual';
 
+  bool get labelNeedsConfirmation =>
+      labelConfidenceTier != 'high_confidence_exact' || reviewRequired;
+
   String get displayCode => finalCode.isNotEmpty ? finalCode : detectedCode;
 
   AnalysisResult copyWith({
@@ -56,7 +73,14 @@ class AnalysisResult {
     String? detectedCode,
     String? finalCode,
     double? labelConfidence,
+    String? labelConfidenceTier,
     List<String>? labelCandidates,
+    List<String>? whitelistCandidatesConsidered,
+    String? labelDecisionSource,
+    String? labelSelectionReason,
+    String? rawOcrText,
+    String? normalizedOcrText,
+    String? layoutSuggestion,
     double? autoDiameterPx,
     double? autoDiameterMm,
     double? correctedDiameterMm,
@@ -79,7 +103,15 @@ class AnalysisResult {
       detectedCode: detectedCode ?? this.detectedCode,
       finalCode: finalCode ?? this.finalCode,
       labelConfidence: labelConfidence ?? this.labelConfidence,
+      labelConfidenceTier: labelConfidenceTier ?? this.labelConfidenceTier,
       labelCandidates: labelCandidates ?? this.labelCandidates,
+      whitelistCandidatesConsidered:
+          whitelistCandidatesConsidered ?? this.whitelistCandidatesConsidered,
+      labelDecisionSource: labelDecisionSource ?? this.labelDecisionSource,
+      labelSelectionReason: labelSelectionReason ?? this.labelSelectionReason,
+      rawOcrText: rawOcrText ?? this.rawOcrText,
+      normalizedOcrText: normalizedOcrText ?? this.normalizedOcrText,
+      layoutSuggestion: layoutSuggestion ?? this.layoutSuggestion,
       autoDiameterPx: autoDiameterPx ?? this.autoDiameterPx,
       autoDiameterMm: autoDiameterMm ?? this.autoDiameterMm,
       correctedDiameterMm: clearCorrectedDiameter
@@ -107,9 +139,22 @@ class AnalysisResult {
       detectedCode: json['detected_code'] as String? ?? 'UNKNOWN',
       finalCode: json['final_code'] as String? ?? 'UNKNOWN',
       labelConfidence: (json['label_confidence'] as num? ?? 0).toDouble(),
+      labelConfidenceTier:
+          json['label_confidence_tier'] as String? ?? 'failed_unknown',
       labelCandidates: (json['label_candidates'] as List<dynamic>? ?? const [])
           .map((item) => item.toString())
           .toList(),
+      whitelistCandidatesConsidered:
+          (json['whitelist_candidates_considered'] as List<dynamic>? ??
+                  const [])
+              .map((item) => item.toString())
+              .toList(),
+      labelDecisionSource:
+          json['label_decision_source'] as String? ?? 'ocr_failed',
+      labelSelectionReason: json['label_selection_reason'] as String? ?? '',
+      rawOcrText: json['raw_ocr_text'] as String? ?? '',
+      normalizedOcrText: json['normalized_ocr_text'] as String? ?? '',
+      layoutSuggestion: json['layout_suggestion'] as String?,
       autoDiameterPx: (json['auto_diameter_px'] as num? ?? 0).toDouble(),
       autoDiameterMm: (json['auto_diameter_mm'] as num? ?? 6).toDouble(),
       correctedDiameterMm: (json['corrected_diameter_mm'] as num?)?.toDouble(),

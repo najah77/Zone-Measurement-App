@@ -27,15 +27,28 @@ class AntibioticCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final double maxDiameter =
         (result.autoDiameterMm + 20).clamp(24, 60).toDouble();
+    final Color labelStatusColor = _labelStatusColor(result);
     final List<String> dropdownCodes = {
       if (result.detectedCode.isNotEmpty) result.detectedCode,
       if (result.finalCode.isNotEmpty) result.finalCode,
       ...result.labelCandidates,
+      ...result.whitelistCandidatesConsidered,
       ...antibioticCodes,
     }.toList();
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
+      color: result.labelNeedsConfirmation
+          ? AppColors.warning.withOpacity(0.06)
+          : AppColors.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(
+          color: result.labelNeedsConfirmation
+              ? labelStatusColor.withOpacity(0.45)
+              : AppColors.border,
+        ),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -70,9 +83,11 @@ class AntibioticCard extends StatelessWidget {
                           _InfoChip(
                             label:
                                 'Label ${(result.labelConfidence * 100).toStringAsFixed(0)}%',
-                            color: result.labelConfidence >= 0.72
-                                ? AppColors.success
-                                : AppColors.warning,
+                            color: labelStatusColor,
+                          ),
+                          _InfoChip(
+                            label: _tierLabel(result.labelConfidenceTier),
+                            color: labelStatusColor,
                           ),
                           _InfoChip(
                             label:
@@ -99,6 +114,26 @@ class AntibioticCard extends StatelessWidget {
                 ),
               ],
             ),
+            if (result.labelSelectionReason.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Text(
+                result.labelSelectionReason,
+                style: AppTextStyles.bodyMedium,
+              ),
+            ],
+            if (result.rawOcrText.isNotEmpty ||
+                result.layoutSuggestion != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                [
+                  if (result.rawOcrText.isNotEmpty) 'OCR: ${result.rawOcrText}',
+                  if (result.layoutSuggestion != null)
+                    'Layout hint: ${result.layoutSuggestion}',
+                ].join('  •  '),
+                style: AppTextStyles.bodyMedium
+                    .copyWith(color: AppColors.textSecondary),
+              ),
+            ],
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
               value: dropdownCodes.contains(result.displayCode)
@@ -107,7 +142,7 @@ class AntibioticCard extends StatelessWidget {
               decoration: const InputDecoration(
                 labelText: 'Antibiotic code',
                 helperText:
-                    'Use the suggested label or confirm manually when confidence is low.',
+                    'Use the suggested label or confirm manually when the OCR tier is not exact.',
               ),
               items: dropdownCodes
                   .map(
@@ -288,5 +323,35 @@ class _InfoChip extends StatelessWidget {
         style: AppTextStyles.labelLarge.copyWith(color: color),
       ),
     );
+  }
+}
+
+String _tierLabel(String tier) {
+  switch (tier) {
+    case 'high_confidence_exact':
+      return 'Exact OCR';
+    case 'probable_match':
+      return 'Confirm OCR';
+    case 'uncertain_manual_confirmation_required':
+      return 'Manual confirm';
+    case 'failed_unknown':
+      return 'Unknown label';
+    default:
+      return tier.replaceAll('_', ' ');
+  }
+}
+
+Color _labelStatusColor(AnalysisResult result) {
+  switch (result.labelConfidenceTier) {
+    case 'high_confidence_exact':
+      return AppColors.success;
+    case 'probable_match':
+      return AppColors.warning;
+    case 'uncertain_manual_confirmation_required':
+      return AppColors.warning;
+    case 'failed_unknown':
+      return AppColors.error;
+    default:
+      return result.labelNeedsConfirmation ? AppColors.warning : AppColors.info;
   }
 }

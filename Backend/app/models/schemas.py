@@ -51,8 +51,15 @@ class DiscMeasurement(BaseModel):
     detected_code: str
     final_code: str
     label_confidence: float = 0.0
+    label_confidence_tier: str = "failed_unknown"
     label_candidates: List[str] = Field(default_factory=list)
+    whitelist_candidates_considered: List[str] = Field(default_factory=list)
     label_engine: str = "ocr"
+    label_decision_source: str = "ocr"
+    label_selection_reason: str = ""
+    raw_ocr_text: str = ""
+    normalized_ocr_text: str = ""
+    layout_suggestion: Optional[str] = None
     auto_diameter_px: float = 0.0
     auto_diameter_mm: float = 6.0
     corrected_diameter_mm: Optional[float] = None

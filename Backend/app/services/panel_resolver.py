@@ -88,22 +88,91 @@ def apply_standard_panel_resolution(results: Sequence[DiscMeasurement], image_sh
         ny = result.center.y / max(1.0, image_height)
         position_distance = hypot(nx - panel_item["position"][0], ny - panel_item["position"][1])
         resolved_confidence = max(0.48, min(0.82, 0.82 - position_distance * 1.6 + similarity * 0.08))
+        panel_code = panel_item["code"]
+        result.layout_suggestion = panel_code
 
-        should_override = result.detected_code not in {panel_item["code"]} and (
-            result.label_confidence < 0.9 or panel_item["code"] in result.label_candidates or similarity >= 0.35
-        )
-        if not should_override:
+        if panel_code not in result.label_candidates:
+            result.label_candidates = [panel_code, *result.label_candidates][:8]
+        if panel_code not in result.whitelist_candidates_considered:
+            result.whitelist_candidates_considered = [panel_code, *result.whitelist_candidates_considered][:8]
+
+        if result.detected_code == panel_code:
             continue
 
-        result.detected_code = panel_item["code"]
-        result.final_code = panel_item["code"]
-        result.label_engine = "ocr+panel-layout"
-        result.label_confidence = round(resolved_confidence, 3)
-        result.overall_confidence = round((result.measurement_confidence * 0.55) + (resolved_confidence * 0.45), 3)
-        candidates = [panel_item["code"]] + [candidate for candidate in result.label_candidates if candidate != panel_item["code"]]
-        result.label_candidates = candidates[:5]
-        if "Panel-layout resolver suggested the code; confirm if the label is unclear." not in result.warnings:
-            result.warnings.append("Panel-layout resolver suggested the code; confirm if the label is unclear.")
+        if result.detected_code == "UNKNOWN" and result.label_confidence_tier in {
+            "failed_unknown",
+            "uncertain_manual_confirmation_required",
+        }:
+            result.detected_code = panel_code
+            result.final_code = panel_code
+            result.label_engine = f"{result.label_engine}+panel-layout"
+            result.label_decision_source = "panel_layout_assist"
+            result.label_confidence = round(max(result.label_confidence, resolved_confidence), 3)
+            result.label_confidence_tier = "uncertain_manual_confirmation_required"
+            result.label_selection_reason = (
+                f"Panel layout suggested '{panel_code}' because OCR was unclear; manual confirmation is still required."
+            )
+            result.overall_confidence = round((result.measurement_confidence * 0.55) + (result.label_confidence * 0.45), 3)
+            if "Panel layout suggested the code because OCR was unclear; confirm it manually." not in result.warnings:
+                result.warnings.append("Panel layout suggested the code because OCR was unclear; confirm it manually.")
+            result.review_required = True
+            if result.status == "auto":
+                result.status = "review_required"
+            continue
+
+        if len(result.detected_code) <= 1 and panel_code in result.label_candidates:
+            original_code = result.detected_code
+            result.detected_code = panel_code
+            result.final_code = panel_code
+            result.label_engine = f"{result.label_engine}+panel-layout"
+            result.label_decision_source = "ocr+panel_layout_disambiguation"
+            result.label_confidence = round(max(result.label_confidence, resolved_confidence), 3)
+            result.label_confidence_tier = "probable_match"
+            result.label_selection_reason = (
+                f"Panel layout promoted '{panel_code}' because OCR only returned the short code '{original_code}'."
+            )
+            result.overall_confidence = round((result.measurement_confidence * 0.55) + (result.label_confidence * 0.45), 3)
+            warning = (
+                f"Panel layout promoted '{panel_code}' because the OCR read was only '{original_code}'; confirm it manually."
+            )
+            if warning not in result.warnings:
+                result.warnings.append(warning)
+            result.review_required = True
+            if result.status in {"auto", "failed"}:
+                result.status = "review_required"
+            continue
+
+        if (
+            result.label_confidence_tier != "high_confidence_exact"
+            and panel_code in result.label_candidates
+            and result.detected_code != panel_code
+        ):
+            original_code = result.detected_code
+            result.detected_code = panel_code
+            result.final_code = panel_code
+            result.label_engine = f"{result.label_engine}+panel-layout"
+            result.label_decision_source = "ocr+panel_layout_disambiguation"
+            result.label_confidence = round(max(result.label_confidence, resolved_confidence), 3)
+            result.label_confidence_tier = "uncertain_manual_confirmation_required"
+            result.label_selection_reason = (
+                f"Panel layout promoted '{panel_code}' because OCR only produced a non-exact probable match for '{original_code}'."
+            )
+            result.overall_confidence = round((result.measurement_confidence * 0.55) + (result.label_confidence * 0.45), 3)
+            warning = (
+                f"Panel layout promoted '{panel_code}' because OCR favored '{original_code}' only weakly; confirm it manually."
+            )
+            if warning not in result.warnings:
+                result.warnings.append(warning)
+            result.review_required = True
+            if result.status in {"auto", "failed"}:
+                result.status = "review_required"
+            continue
+
+        disagreement_warning = (
+            f"Panel layout suggests '{panel_code}', but OCR read '{result.detected_code}'; confirm the disc code manually."
+        )
+        if disagreement_warning not in result.warnings:
+            result.warnings.append(disagreement_warning)
         result.review_required = True
-        if result.status == "auto":
+        if result.status in {"auto", "failed"}:
             result.status = "review_required"

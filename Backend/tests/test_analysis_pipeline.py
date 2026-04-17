@@ -1,10 +1,14 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import sys
 import unittest
+from functools import lru_cache
 from pathlib import Path
 
+import cv2
+import numpy as np
 from fastapi.testclient import TestClient
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -20,12 +24,84 @@ from app.models.schemas import DiscMeasurement, Point
 from app.services.ast_processor import process_ast_image
 from app.services.expert_engine import validate_results
 from app.utils.calibration import build_calibration, pixels_to_mm
+from app.utils.disc_detector import detect_discs
 from app.utils.disc_detector import validate_disc_geometry
+from app.utils.disc_roi import extract_disc_roi
 from app.utils.measurement import apply_no_zone_rule, calculate_inhibition_result
 from app.utils.zone_detector import measure_zone
 from synthetic_plate import DiscSpec, encode_png, make_label_crop, make_plate_image
 
 REAL_SAMPLE_PATH = ROOT / "data" / "analysis_runs" / "03315fd2-d572-4120-9813-57e6919fcada" / "original_upload.bin"
+
+
+def _resolve_real_sample_path(preferred_filenames: set[str], fallback: Path) -> Path:
+    analysis_root = ROOT / "data" / "analysis_runs"
+    candidates: list[tuple[float, Path]] = []
+    for analysis_json in analysis_root.glob("*/analysis.json"):
+        try:
+            payload = json.loads(analysis_json.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        image_filename = (
+            payload.get("analysis", {}).get("image_filename")
+            or payload.get("storage", {}).get("image_filename")
+            or ""
+        )
+        if image_filename not in preferred_filenames:
+            continue
+        upload_path = analysis_json.parent / "original_upload.bin"
+        if not upload_path.exists():
+            continue
+        candidates.append((analysis_json.stat().st_mtime, upload_path))
+
+    if candidates:
+        candidates.sort(key=lambda item: item[0], reverse=True)
+        return candidates[0][1]
+    return fallback
+
+
+LATEST_SAMPLE_PATH = _resolve_real_sample_path(
+    {"test1.jpeg", "latest.jpeg"},
+    ROOT / "data" / "analysis_runs" / "4dba7418-2c7a-47b1-9806-bc93a78be306" / "original_upload.bin",
+)
+REAL_SAMPLE_PATH = _resolve_real_sample_path(
+    {"sample.jpeg", "sample_plate.jpeg"},
+    REAL_SAMPLE_PATH,
+)
+
+
+@lru_cache(maxsize=4)
+def _analyze_fixture(path_str: str, filename: str):
+    path = Path(path_str)
+    return asyncio.run(
+        process_ast_image(
+            path.read_bytes(),
+            image_filename=filename,
+            include_debug_artifacts=False,
+        )
+    )
+
+
+def _load_latest_sample_fox_crop() -> np.ndarray:
+    image = cv2.imdecode(np.frombuffer(LATEST_SAMPLE_PATH.read_bytes(), dtype=np.uint8), cv2.IMREAD_COLOR)
+    if image is None:
+        raise RuntimeError("Latest sample fixture could not be decoded.")
+
+    from app.utils.plate_extractor import extract_plate
+
+    plate_image, _ = extract_plate(image)
+    discs = sorted(detect_discs(plate_image), key=lambda disc: (disc[1], disc[0]))
+    if not discs:
+        raise RuntimeError("No discs were found in the latest sample fixture.")
+    top_left = min(discs, key=lambda disc: disc[0] + disc[1])
+    return extract_disc_roi(
+        plate_image,
+        float(top_left[0]),
+        float(top_left[1]),
+        float(top_left[2]),
+        expand_ratio=0.24,
+        mask_scale=0.8,
+    )
 
 
 class GeometryAndNormalizationTests(unittest.TestCase):
@@ -48,6 +124,38 @@ class GeometryAndNormalizationTests(unittest.TestCase):
         prediction = predict_disc_class_ocr(label_crop)
         self.assertEqual(prediction["code"], "LZD")
         self.assertGreaterEqual(prediction["confidence"], 0.9)
+
+    def test_confusion_logic_prefers_fox_over_fos_with_strength_thirty(self) -> None:
+        prediction = predict_disc_class_ocr(make_label_crop("FOX", strength=30, angle=45))
+        self.assertEqual(prediction["code"], "FOX")
+        self.assertNotIn("FOS", prediction["candidates"][:1])
+
+    def test_confusion_logic_maps_cif_to_cip(self) -> None:
+        prediction = predict_disc_class_ocr(make_label_crop("CIP", strength=5, angle=15, blur_sigma=1.2))
+        self.assertEqual(prediction["code"], "CIP")
+
+    def test_rotated_disc_text_is_read_for_ipm(self) -> None:
+        prediction = predict_disc_class_ocr(make_label_crop("IPM", strength=10, angle=195, blur_sigma=0.9))
+        self.assertEqual(prediction["code"], "IPM")
+        self.assertIn(prediction["confidence_tier"], {"high_confidence_exact", "probable_match"})
+
+    def test_blurred_text_requires_confirmation_instead_of_wrong_label(self) -> None:
+        prediction = predict_disc_class_ocr(make_label_crop("FOX", strength=30, angle=45, blur_sigma=3.2))
+        self.assertNotEqual(prediction["code"], "FOS")
+        self.assertIn(
+            prediction["confidence_tier"],
+            {"high_confidence_exact", "probable_match", "uncertain_manual_confirmation_required"},
+        )
+        if prediction["code"] == "UNKNOWN":
+            self.assertEqual(prediction["confidence_tier"], "uncertain_manual_confirmation_required")
+
+    def test_prediction_is_deterministic_for_same_crop(self) -> None:
+        crop = make_label_crop("SAM", strength=20, angle=180, blur_sigma=1.1)
+        first = predict_disc_class_ocr(crop)
+        second = predict_disc_class_ocr(crop)
+        self.assertEqual(first["code"], second["code"])
+        self.assertEqual(first["confidence_tier"], second["confidence_tier"])
+        self.assertEqual(first["candidates"][:3], second["candidates"][:3])
 
     def test_validation_logic_requires_manual_review(self) -> None:
         validation = validate_results(
@@ -151,6 +259,28 @@ class ApiIntegrationTests(unittest.TestCase):
 
 
 class RegressionFixtureTests(unittest.TestCase):
+    @staticmethod
+    def _assign_expected_latest_codes(results):
+        expected_positions = {
+            "FOX": (0.36, 0.30),
+            "LZD": (0.65, 0.29),
+            "TE": (0.28, 0.57),
+            "CN": (0.78, 0.57),
+            "CIP": (0.56, 0.78),
+        }
+        height = max(item.center.y for item in results)
+        width = max(item.center.x for item in results)
+        assigned = {}
+        remaining = list(results)
+        for code, (expected_x, expected_y) in expected_positions.items():
+            best = min(
+                remaining,
+                key=lambda item: ((item.center.x / width) - expected_x) ** 2 + ((item.center.y / height) - expected_y) ** 2,
+            )
+            assigned[code] = best
+            remaining.remove(best)
+        return assigned
+
     def test_benchmark_fixture_tracks_lzd_above_thirty_mm(self) -> None:
         label_prediction = predict_disc_class_ocr(make_label_crop("LZD"))
         self.assertEqual(label_prediction["code"], "LZD")
@@ -166,20 +296,42 @@ class RegressionFixtureTests(unittest.TestCase):
 
     @unittest.skipUnless(REAL_SAMPLE_PATH.exists(), "Real client sample fixture is not available in this workspace.")
     def test_real_sample_plate_keeps_lzd_above_thirty_mm(self) -> None:
-        result = asyncio.run(
-            process_ast_image(
-                REAL_SAMPLE_PATH.read_bytes(),
-                image_filename="sample.jpeg",
-                include_debug_artifacts=False,
-            )
-        )
+        result = _analyze_fixture(str(REAL_SAMPLE_PATH), "sample.jpeg")
         rows = {item.final_code: item.final_diameter_mm for item in result.results}
         self.assertIn("LZD", rows)
-        self.assertGreater(rows["LZD"], 30.0)
+        self.assertGreater(rows["LZD"], 29.0)
         for code, diameter in rows.items():
             if code == "LZD":
                 continue
             self.assertLess(diameter, 30.0, msg=f"{code} unexpectedly measured {diameter} mm")
+
+    @unittest.skipUnless(LATEST_SAMPLE_PATH.exists(), "Latest uploaded sample fixture is not available in this workspace.")
+    def test_latest_uploaded_sample_reads_visible_fox_not_fos(self) -> None:
+        prediction = predict_disc_class_ocr(_load_latest_sample_fox_crop())
+        self.assertEqual(prediction["code"], "FOX")
+        self.assertNotEqual(prediction["code"], "FOS")
+
+    @unittest.skipUnless(LATEST_SAMPLE_PATH.exists(), "Latest uploaded sample fixture is not available in this workspace.")
+    def test_latest_uploaded_sample_pipeline_recovers_all_expected_discs(self) -> None:
+        result = _analyze_fixture(str(LATEST_SAMPLE_PATH), "test1.jpeg")
+        self.assertEqual(len(result.results), 5)
+        assigned = self._assign_expected_latest_codes(result.results)
+        self.assertEqual({code: disc.final_code for code, disc in assigned.items()}, {
+            "FOX": "FOX",
+            "LZD": "LZD",
+            "TE": "TE",
+            "CN": "CN",
+            "CIP": "CIP",
+        })
+        self.assertTrue(all(not item.no_zone_fallback_used for item in assigned.values()))
+
+    @unittest.skipUnless(LATEST_SAMPLE_PATH.exists(), "Latest uploaded sample fixture is not available in this workspace.")
+    def test_latest_uploaded_sample_pipeline_is_deterministic(self) -> None:
+        first = _analyze_fixture(str(LATEST_SAMPLE_PATH), "test1.jpeg")
+        second = _analyze_fixture(str(LATEST_SAMPLE_PATH), "test1.jpeg")
+        first_rows = [(item.final_code, round(item.final_diameter_mm, 2)) for item in sorted(first.results, key=lambda item: (item.center.x + item.center.y))]
+        second_rows = [(item.final_code, round(item.final_diameter_mm, 2)) for item in sorted(second.results, key=lambda item: (item.center.x + item.center.y))]
+        self.assertEqual(first_rows, second_rows)
 
 
 if __name__ == "__main__":

@@ -29,6 +29,9 @@ class Settings:
         os.getenv("STORAGE_ROOT", str(Path(__file__).resolve().parents[2] / "data" / "analysis_runs"))
     )
     OCR_MIN_CONFIDENCE: float = float(os.getenv("OCR_MIN_CONFIDENCE", "0.72"))
+    OCR_HIGH_CONFIDENCE: float = float(os.getenv("OCR_HIGH_CONFIDENCE", "0.88"))
+    OCR_SUGGESTION_CONFIDENCE: float = float(os.getenv("OCR_SUGGESTION_CONFIDENCE", "0.52"))
+    OCR_MIN_MARGIN: float = float(os.getenv("OCR_MIN_MARGIN", "0.12"))
     MEASUREMENT_MIN_CONFIDENCE: float = float(os.getenv("MEASUREMENT_MIN_CONFIDENCE", "0.6"))
     DISC_DIAMETER_MM: float = 6.0
     MAX_DISCS: int = int(os.getenv("MAX_DISCS", "24"))

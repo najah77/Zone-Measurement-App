@@ -46,6 +46,24 @@ def _encode_image_to_base64(image: np.ndarray) -> str:
     return base64.b64encode(encoded.tobytes()).decode("ascii")
 
 
+def _persist_debug_artifacts(directory: Path, analysis: AnalysisResponse) -> None:
+    if not analysis.debug_artifacts:
+        return
+
+    for key, value in list(analysis.debug_artifacts.items()):
+        if not key.endswith("_base64") or not isinstance(value, str) or not value:
+            continue
+        try:
+            image_bytes = base64.b64decode(value)
+        except (ValueError, TypeError):
+            continue
+
+        suffix = key[: -len("_base64")]
+        target = directory / f"{suffix}.png"
+        target.write_bytes(image_bytes)
+        analysis.debug_artifacts[f"{suffix}_path"] = str(target)
+
+
 def save_analysis_record(
     analysis: AnalysisResponse,
     image_bytes: bytes,
@@ -56,6 +74,7 @@ def save_analysis_record(
 
     image_path = directory / "original_upload.bin"
     image_path.write_bytes(image_bytes)
+    _persist_debug_artifacts(directory, analysis)
 
     record = PersistedAnalysisRecord(
         analysis=analysis,
@@ -107,6 +126,10 @@ def apply_review_update(analysis_id: str, payload: SaveReviewRequest) -> Analysi
             disc.source = "manual"
             disc.status = "corrected"
             disc.review_required = False
+            disc.label_decision_source = "manual_confirmation"
+            disc.label_selection_reason = "Operator manually confirmed or corrected the antibiotic code."
+            if disc.final_code and disc.final_code not in disc.label_candidates:
+                disc.label_candidates = [disc.final_code, *disc.label_candidates][:8]
 
         if update.operator_note:
             disc.operator_note = update.operator_note

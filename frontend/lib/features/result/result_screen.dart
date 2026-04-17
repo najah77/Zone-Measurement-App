@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/constants/app_constants.dart';
+import '../../core/theme/colors.dart';
 import '../../core/theme/text_styles.dart';
 import '../../core/widgets/custom_app_bar.dart';
 import '../../core/widgets/primary_button.dart';
@@ -92,6 +93,12 @@ class _ResultScreenContentState extends State<_ResultScreenContent> {
                               rows: viewModel.items
                                   .map(
                                     (item) => DataRow(
+                                      color: MaterialStatePropertyAll(
+                                        item.labelNeedsConfirmation
+                                            ? AppColors.warning
+                                                .withOpacity(0.08)
+                                            : null,
+                                      ),
                                       cells: [
                                         DataCell(
                                             Text(item.rowNumber.toString())),
@@ -108,6 +115,16 @@ class _ResultScreenContentState extends State<_ResultScreenContent> {
                                               Text(item.name,
                                                   style:
                                                       AppTextStyles.bodyMedium),
+                                              if (item.labelNeedsConfirmation)
+                                                Text(
+                                                  item.labelSelectionReason,
+                                                  style: AppTextStyles
+                                                      .bodyMedium
+                                                      .copyWith(
+                                                    color:
+                                                        AppColors.textSecondary,
+                                                  ),
+                                                ),
                                             ],
                                           ),
                                         ),

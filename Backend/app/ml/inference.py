@@ -140,19 +140,22 @@ def hybrid_analysis_pipeline(
         detected_code = str(label_prediction.get("code", "UNKNOWN")).upper()
         label_confidence = float(label_prediction.get("confidence", 0.0))
         label_candidates = [candidate.upper() for candidate in label_prediction.get("candidates", [])]
+        label_tier = str(label_prediction.get("confidence_tier", "failed_unknown"))
 
         result_warnings: List[str] = []
         zone_warning = str(zone_result.get("warning", "") or "")
         if zone_warning:
             result_warnings.append(zone_warning)
-        if detected_code == "UNKNOWN":
-            result_warnings.append("Disc label could not be read automatically.")
-        elif label_confidence < settings.OCR_MIN_CONFIDENCE:
-            result_warnings.append("Disc label confidence is low; confirm the suggested code.")
+        if label_tier == "failed_unknown":
+            result_warnings.append("Disc label could not be confirmed automatically.")
+        elif label_tier == "uncertain_manual_confirmation_required":
+            result_warnings.append("Disc label needs manual confirmation before the result is accepted.")
+        elif label_tier == "probable_match":
+            result_warnings.append("Disc label is a probable whitelist match; confirm it before saving.")
 
         measurement_confidence = float(zone_result["confidence"])
         overall_confidence = round((label_confidence * 0.45) + (measurement_confidence * 0.55), 3)
-        review_required = bool(zone_result["review_required"]) or label_confidence < settings.OCR_MIN_CONFIDENCE or quality_report.review_required
+        review_required = bool(zone_result["review_required"]) or label_tier != "high_confidence_exact" or quality_report.review_required
 
         status = "auto"
         if detected_code == "UNKNOWN" and measurement_confidence < 0.35:
@@ -172,8 +175,16 @@ def hybrid_analysis_pipeline(
                 detected_code=detected_code,
                 final_code=detected_code,
                 label_confidence=round(label_confidence, 3),
+                label_confidence_tier=label_tier,
                 label_candidates=label_candidates,
-                label_engine="tesseract-ocr",
+                whitelist_candidates_considered=[
+                    candidate.upper() for candidate in label_prediction.get("whitelist_candidates", [])
+                ],
+                label_engine=str(label_prediction.get("engine", "hybrid-ocr-whitelist")),
+                label_decision_source=str(label_prediction.get("decision_source", "ocr")),
+                label_selection_reason=str(label_prediction.get("selection_reason", "")),
+                raw_ocr_text=str(label_prediction.get("raw_ocr_text", "")),
+                normalized_ocr_text=str(label_prediction.get("normalized_text", "")),
                 auto_diameter_px=round(auto_diameter_px, 2),
                 auto_diameter_mm=round(auto_diameter_mm, 2),
                 final_diameter_mm=round(auto_diameter_mm, 2),
