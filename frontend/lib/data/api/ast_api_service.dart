@@ -7,7 +7,14 @@ import '../../core/models/analysis_result.dart';
 import '../models/ast_result_model.dart';
 
 class AstApiService {
-  static const String _baseUrl = 'http://127.0.0.1:8000';
+  static const String _configuredBaseUrl = String.fromEnvironment(
+    'BACKEND_BASE_URL',
+    defaultValue: 'http://127.0.0.1:8000',
+  );
+
+  String get _baseUrl => _configuredBaseUrl.endsWith('/')
+      ? _configuredBaseUrl.substring(0, _configuredBaseUrl.length - 1)
+      : _configuredBaseUrl;
 
   Future<AnalysisSessionModel> analyzeImage(String imagePath) async {
     final uri = Uri.parse('$_baseUrl/api/analyze');

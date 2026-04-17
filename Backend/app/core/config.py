@@ -20,6 +20,11 @@ class Settings:
     API_PREFIX: str = "/api"
     VERSION: str = os.getenv("APP_VERSION", "2.0.0")
     ALGORITHM_VERSION: str = os.getenv("ALGORITHM_VERSION", "zone-measurement-2.0.0")
+    CORS_ALLOW_ORIGINS: tuple[str, ...] = tuple(
+        origin.strip()
+        for origin in os.getenv("CORS_ALLOW_ORIGINS", "*").split(",")
+        if origin.strip()
+    ) or ("*",)
     HF_API_KEY: str = os.getenv("HF_API_KEY", "")
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
     USE_HF_VISION: bool = _env_bool("USE_HF_VISION", False)
