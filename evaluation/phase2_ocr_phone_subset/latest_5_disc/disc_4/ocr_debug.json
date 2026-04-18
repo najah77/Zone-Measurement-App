@@ -1,0 +1,318 @@
+{
+  "observation_count": 4,
+  "observations": [
+    {
+      "source_index": 0,
+      "variant": "blackhat",
+      "angle": 72,
+      "psm": 6,
+      "raw_text": "PP |  | CN | 10 |  | A",
+      "normalized_text": "PP 10",
+      "tokens": [
+        "PP",
+        "CN",
+        "A"
+      ],
+      "strengths": [
+        10
+      ]
+    },
+    {
+      "source_index": 0,
+      "variant": "blackhat",
+      "angle": 252,
+      "psm": 6,
+      "raw_text": "PO | N32",
+      "normalized_text": "PO",
+      "tokens": [
+        "PO",
+        "P0",
+        "NZ",
+        "N32",
+        "N2"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "blackhat",
+      "angle": 342,
+      "psm": 6,
+      "raw_text": "LT",
+      "normalized_text": "LT",
+      "tokens": [
+        "LT",
+        "L1"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "inv_otsu",
+      "angle": 252,
+      "psm": 6,
+      "raw_text": "PO",
+      "normalized_text": "PO",
+      "tokens": [
+        "PO",
+        "P0"
+      ],
+      "strengths": []
+    }
+  ],
+  "candidate_ranking": [
+    {
+      "code": "CN",
+      "score": 0.99,
+      "exact_matches": 1,
+      "alias_matches": 0,
+      "strength_hits": 1,
+      "global_strength_matches": 1,
+      "structured_matches": 0,
+      "support_count": 1,
+      "source_count": 1,
+      "token_support": [
+        "CN"
+      ],
+      "best_observation": {
+        "raw_text": "PP |  | CN | 10 |  | A",
+        "normalized_text": "PP 10",
+        "angle": 72,
+        "variant": "blackhat",
+        "source_index": 0,
+        "token": "CN",
+        "reason": "exact, strength 10",
+        "strengths": [
+          10
+        ]
+      }
+    },
+    {
+      "code": "POL",
+      "score": 0.94,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 0,
+      "global_strength_matches": 0,
+      "structured_matches": 2,
+      "support_count": 4,
+      "source_count": 1,
+      "token_support": [
+        "P0",
+        "PO"
+      ],
+      "best_observation": {
+        "raw_text": "PO | N32",
+        "normalized_text": "PO",
+        "angle": 252,
+        "variant": "blackhat",
+        "source_index": 0,
+        "token": "PO",
+        "reason": "prefix",
+        "strengths": []
+      }
+    },
+    {
+      "code": "P",
+      "score": 0.8,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 2,
+      "global_strength_matches": 1,
+      "structured_matches": 0,
+      "support_count": 2,
+      "source_count": 1,
+      "token_support": [
+        "A",
+        "PP"
+      ],
+      "best_observation": {
+        "raw_text": "PP |  | CN | 10 |  | A",
+        "normalized_text": "PP 10",
+        "angle": 72,
+        "variant": "blackhat",
+        "source_index": 0,
+        "token": "A",
+        "reason": "partial, strength 10",
+        "strengths": [
+          10
+        ]
+      }
+    },
+    {
+      "code": "DO",
+      "score": 0.723,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 0,
+      "global_strength_matches": 0,
+      "structured_matches": 0,
+      "support_count": 2,
+      "source_count": 1,
+      "token_support": [
+        "PO"
+      ],
+      "best_observation": {
+        "raw_text": "PO | N32",
+        "normalized_text": "PO",
+        "angle": 252,
+        "variant": "blackhat",
+        "source_index": 0,
+        "token": "PO",
+        "reason": "partial",
+        "strengths": []
+      }
+    },
+    {
+      "code": "AM",
+      "score": 0.717,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 1,
+      "global_strength_matches": 1,
+      "structured_matches": 0,
+      "support_count": 1,
+      "source_count": 1,
+      "token_support": [
+        "CN"
+      ],
+      "best_observation": {
+        "raw_text": "PP |  | CN | 10 |  | A",
+        "normalized_text": "PP 10",
+        "angle": 72,
+        "variant": "blackhat",
+        "source_index": 0,
+        "token": "CN",
+        "reason": "partial, strength 10",
+        "strengths": [
+          10
+        ]
+      }
+    },
+    {
+      "code": "PIP",
+      "score": 0.71,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 0,
+      "global_strength_matches": 0,
+      "structured_matches": 1,
+      "support_count": 1,
+      "source_count": 1,
+      "token_support": [
+        "PP"
+      ],
+      "best_observation": {
+        "raw_text": "PP |  | CN | 10 |  | A",
+        "normalized_text": "PP 10",
+        "angle": 72,
+        "variant": "blackhat",
+        "source_index": 0,
+        "token": "PP",
+        "reason": "outer-pair, strength mismatch 10",
+        "strengths": [
+          10
+        ]
+      }
+    },
+    {
+      "code": "CPD",
+      "score": 0.67,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 1,
+      "global_strength_matches": 1,
+      "structured_matches": 0,
+      "support_count": 1,
+      "source_count": 1,
+      "token_support": [
+        "PP"
+      ],
+      "best_observation": {
+        "raw_text": "PP |  | CN | 10 |  | A",
+        "normalized_text": "PP 10",
+        "angle": 72,
+        "variant": "blackhat",
+        "source_index": 0,
+        "token": "PP",
+        "reason": "partial, strength 10",
+        "strengths": [
+          10
+        ]
+      }
+    },
+    {
+      "code": "FOS",
+      "score": 0.637,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 0,
+      "global_strength_matches": 0,
+      "structured_matches": 0,
+      "support_count": 2,
+      "source_count": 1,
+      "token_support": [
+        "PO"
+      ],
+      "best_observation": {
+        "raw_text": "PO | N32",
+        "normalized_text": "PO",
+        "angle": 252,
+        "variant": "blackhat",
+        "source_index": 0,
+        "token": "PO",
+        "reason": "partial",
+        "strengths": []
+      }
+    },
+    {
+      "code": "FOX",
+      "score": 0.637,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 0,
+      "global_strength_matches": 0,
+      "structured_matches": 0,
+      "support_count": 2,
+      "source_count": 1,
+      "token_support": [
+        "PO"
+      ],
+      "best_observation": {
+        "raw_text": "PO | N32",
+        "normalized_text": "PO",
+        "angle": 252,
+        "variant": "blackhat",
+        "source_index": 0,
+        "token": "PO",
+        "reason": "partial",
+        "strengths": []
+      }
+    },
+    {
+      "code": "TE",
+      "score": 0.607,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 0,
+      "global_strength_matches": 0,
+      "structured_matches": 0,
+      "support_count": 2,
+      "source_count": 1,
+      "token_support": [
+        "L1",
+        "LT"
+      ],
+      "best_observation": {
+        "raw_text": "LT",
+        "normalized_text": "LT",
+        "angle": 342,
+        "variant": "blackhat",
+        "source_index": 0,
+        "token": "LT",
+        "reason": "partial",
+        "strengths": []
+      }
+    }
+  ]
+}

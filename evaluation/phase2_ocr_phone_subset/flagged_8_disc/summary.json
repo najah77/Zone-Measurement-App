@@ -1,0 +1,178 @@
+[
+  {
+    "disc_index": 1,
+    "center": {
+      "x": 616.5,
+      "y": 233.8
+    },
+    "radius": 41.9,
+    "code": "IPM",
+    "confidence_tier": "probable_match",
+    "confidence": 0.94,
+    "raw_ocr_text": "19M",
+    "normalized_text": "IM",
+    "candidates": [
+      "CIP",
+      "IPM",
+      "CN",
+      "AM",
+      "P",
+      "TE"
+    ],
+    "selection_reason": "Rotation voting and whitelist scoring favored 'IPM' over nearby alternatives; manual confirmation is still required."
+  },
+  {
+    "disc_index": 2,
+    "center": {
+      "x": 363.6,
+      "y": 320.6
+    },
+    "radius": 41.5,
+    "code": "UNKNOWN",
+    "confidence_tier": "uncertain_manual_confirmation_required",
+    "confidence": 0.99,
+    "raw_ocr_text": "TZP",
+    "normalized_text": "TZP",
+    "candidates": [
+      "TZP",
+      "FF",
+      "NOR",
+      "TPZ",
+      "COL",
+      "POL"
+    ],
+    "selection_reason": "OCR produced 'TZP' from a narrow single-source exact read, but nearby alternatives remained too close to trust it automatically."
+  },
+  {
+    "disc_index": 3,
+    "center": {
+      "x": 857.5,
+      "y": 352.6
+    },
+    "radius": 41.9,
+    "code": "CN",
+    "confidence_tier": "high_confidence_exact",
+    "confidence": 0.99,
+    "raw_ocr_text": "CN | 10",
+    "normalized_text": "CN 10",
+    "candidates": [
+      "CN",
+      "SXT",
+      "P",
+      "AM",
+      "DO",
+      "COL"
+    ],
+    "selection_reason": "Rotation voting produced an exact whitelist match for 'CN' from OCR 'CN | 10' using strength 10."
+  },
+  {
+    "disc_index": 4,
+    "center": {
+      "x": 247.0,
+      "y": 561.5
+    },
+    "radius": 40.3,
+    "code": "KAN",
+    "confidence_tier": "probable_match",
+    "confidence": 0.94,
+    "raw_ocr_text": "KZ | 30",
+    "normalized_text": "KZ 30",
+    "candidates": [
+      "KAN",
+      "NET",
+      "NOR",
+      "ETP",
+      "LZD",
+      "DO"
+    ],
+    "selection_reason": "Rotation voting and whitelist scoring favored 'KAN' over nearby alternatives using strength 30; manual confirmation is still required."
+  },
+  {
+    "disc_index": 5,
+    "center": {
+      "x": 937.8,
+      "y": 603.4
+    },
+    "radius": 40.3,
+    "code": "UNKNOWN",
+    "confidence_tier": "uncertain_manual_confirmation_required",
+    "confidence": 0.99,
+    "raw_ocr_text": "NET",
+    "normalized_text": "NET",
+    "candidates": [
+      "NET",
+      "KAN",
+      "CN",
+      "AK",
+      "VA",
+      "AM"
+    ],
+    "selection_reason": "OCR produced 'NET' from a narrow single-source exact read, but nearby alternatives remained too close to trust it automatically."
+  },
+  {
+    "disc_index": 6,
+    "center": {
+      "x": 335.5,
+      "y": 807.5
+    },
+    "radius": 40.4,
+    "code": "AK",
+    "confidence_tier": "high_confidence_exact",
+    "confidence": 0.99,
+    "raw_ocr_text": "AK | 30",
+    "normalized_text": "AK 30",
+    "candidates": [
+      "AK",
+      "NOR",
+      "AMK",
+      "DO",
+      "TE",
+      "TGC"
+    ],
+    "selection_reason": "Rotation voting produced an exact whitelist match for 'AK' from OCR 'AK | 30' using strength 30."
+  },
+  {
+    "disc_index": 7,
+    "center": {
+      "x": 817.9,
+      "y": 837.7
+    },
+    "radius": 41.4,
+    "code": "FEP",
+    "confidence_tier": "high_confidence_exact",
+    "confidence": 0.99,
+    "raw_ocr_text": "CRY | FE | 30",
+    "normalized_text": "CRY 30",
+    "candidates": [
+      "FEP",
+      "TE",
+      "CEF",
+      "NET",
+      "FOX",
+      "TEC"
+    ],
+    "selection_reason": "Rotation voting produced an exact whitelist match for 'FEP' from OCR 'CRY | FE | 30' using strength 30."
+  },
+  {
+    "disc_index": 8,
+    "center": {
+      "x": 567.9,
+      "y": 923.2
+    },
+    "radius": 40.6,
+    "code": "FOX",
+    "confidence_tier": "high_confidence_exact",
+    "confidence": 0.99,
+    "raw_ocr_text": "FOX | 30",
+    "normalized_text": "FOX 30",
+    "candidates": [
+      "FOX",
+      "DO",
+      "FOS",
+      "LEV",
+      "TMP",
+      "CFX"
+    ],
+    "selection_reason": "Rotation voting produced an exact whitelist match for 'FOX' from OCR 'FOX | 30' using strength 30."
+  }
+]

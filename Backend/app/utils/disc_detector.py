@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Dict, List, Sequence, Tuple
+from typing import Any, Dict, List, Sequence, Tuple
 
 import cv2
 import numpy as np
@@ -11,6 +11,38 @@ from app.utils.plate_extractor import build_plate_mask, detect_plate_circle
 from app.utils.preprocessing import preprocess_plate
 
 DiscCircle = Tuple[float, float, float]
+
+
+def _round_metrics(metrics: Dict[str, float] | None) -> Dict[str, float]:
+    if not metrics:
+        return {}
+    return {key: round(float(value), 4) for key, value in metrics.items()}
+
+
+def _candidate_record(
+    disc: DiscCircle,
+    *,
+    source: str,
+    stage: str,
+    score: float | None = None,
+    reason: str | None = None,
+    metrics: Dict[str, float] | None = None,
+) -> Dict[str, Any]:
+    payload: Dict[str, Any] = {
+        "x": round(float(disc[0]), 2),
+        "y": round(float(disc[1]), 2),
+        "radius": round(float(disc[2]), 2),
+        "source": source,
+        "stage": stage,
+    }
+    if score is not None:
+        payload["score"] = round(float(score), 2)
+    if reason:
+        payload["reason"] = reason
+    rounded_metrics = _round_metrics(metrics)
+    if rounded_metrics:
+        payload["metrics"] = rounded_metrics
+    return payload
 
 
 def validate_disc_geometry(discs: Sequence[DiscCircle]) -> bool:
@@ -339,6 +371,58 @@ def _blob_disc_candidates(
     return discs
 
 
+def _supplemental_phone_hough_candidates(
+    image: np.ndarray,
+    plate_mask: np.ndarray,
+    white_mask: np.ndarray,
+    core_mask: np.ndarray,
+    min_radius: float,
+    max_radius: float,
+) -> List[Tuple[DiscCircle, str]]:
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) if image.ndim == 3 else image.copy()
+    masked_gray = gray.copy()
+    masked_gray[plate_mask == 0] = int(np.median(gray))
+    white_source = cv2.GaussianBlur(white_mask, (9, 9), 0)
+    gray_source = cv2.GaussianBlur(masked_gray, (9, 9), 0)
+
+    candidates: List[Tuple[DiscCircle, str]] = []
+    for source_name, source, param1, param2 in (
+        ("hough_gray", gray_source, 80, 14),
+        ("hough_white", white_source, 90, 14),
+    ):
+        circles = cv2.HoughCircles(
+            source,
+            cv2.HOUGH_GRADIENT,
+            dp=1.1,
+            minDist=max(22, int(round(min_radius * 2.2))),
+            param1=param1,
+            param2=param2,
+            minRadius=max(8, int(round(min_radius * 0.7))),
+            maxRadius=max(10, int(round(max_radius * 1.1))),
+        )
+        if circles is None:
+            continue
+
+        for x, y, radius in circles[0]:
+            ix = int(np.clip(round(x), 0, plate_mask.shape[1] - 1))
+            iy = int(np.clip(round(y), 0, plate_mask.shape[0] - 1))
+            if plate_mask[iy, ix] == 0:
+                continue
+
+            metrics = _disc_candidate_metrics(gray, white_mask, core_mask, float(x), float(y), float(radius))
+            if metrics is None:
+                continue
+            if metrics["contrast"] < 25.0:
+                continue
+            if metrics["center_mean"] < 145.0 and metrics["white_occupancy"] < 0.34:
+                continue
+            if metrics["bright_fraction"] < 0.32 and metrics["white_occupancy"] < 0.18:
+                continue
+            candidates.append(((float(x), float(y), float(radius)), source_name))
+
+    return candidates
+
+
 def _is_bright_disc_center_basic(
     gray: np.ndarray,
     cx: float,
@@ -453,6 +537,36 @@ def refine_detected_discs(image: np.ndarray, discs: Sequence[DiscCircle]) -> Lis
     return [_refine_disc_radius(image, disc) for disc in discs]
 
 
+def _merge_scored_candidates(
+    candidates: Sequence[Tuple[DiscCircle, float, str, Dict[str, float]]],
+) -> tuple[List[Tuple[DiscCircle, float, str, Dict[str, float]]], List[Dict[str, Any]]]:
+    accepted: List[Tuple[DiscCircle, float, str, Dict[str, float]]] = []
+    rejected: List[Dict[str, Any]] = []
+    for disc, score, source, metrics in sorted(candidates, key=lambda item: item[1], reverse=True):
+        duplicate_of = next(
+            (
+                kept
+                for kept in accepted
+                if np.hypot(disc[0] - kept[0][0], disc[1] - kept[0][1]) < max(disc[2], kept[0][2]) * 0.9
+            ),
+            None,
+        )
+        if duplicate_of is not None:
+            rejected.append(
+                _candidate_record(
+                    disc,
+                    source=source,
+                    stage="rejected",
+                    score=score,
+                    reason=f"duplicate_of_{duplicate_of[2]}",
+                    metrics=metrics,
+                )
+            )
+            continue
+        accepted.append((disc, score, source, metrics))
+    return accepted, rejected
+
+
 def detect_discs_with_debug(
     image: np.ndarray,
     plate_detection: PlateDetection | None = None,
@@ -482,11 +596,12 @@ def detect_discs_with_debug(
         max_radius,
         dense_layout=dense_layout,
     )
-    component_discs = _merge_similar_discs(
-        component_candidates
-    )
+    component_discs = _merge_similar_discs(component_candidates)
     hough_discs: List[DiscCircle] = []
     blob_discs: List[DiscCircle] = []
+    raw_candidates: List[Tuple[DiscCircle, str]] = [(disc, "component") for disc in component_discs]
+    fallback_detection_used = False
+    suspicious_low_count = False
     if dense_layout:
         blob_discs = _blob_disc_candidates(base_image, plate_mask, white_mask, core_mask, min_radius, max_radius)
         hough_discs = _hough_disc_candidates(
@@ -498,14 +613,36 @@ def detect_discs_with_debug(
             max_radius,
             prefer_dense_layout=True,
         )
-        candidates = _merge_similar_discs(component_discs + blob_discs + hough_discs)
-    elif len(component_discs) >= 3 and validate_disc_geometry(component_discs):
-        candidates = _merge_similar_discs(component_discs)
+        raw_candidates.extend((disc, "blob") for disc in blob_discs)
+        raw_candidates.extend((disc, "hough_dense") for disc in hough_discs)
     else:
-        hough_discs = _hough_disc_candidates(preprocessed, plate_mask, white_mask, core_mask, min_radius, max_radius)
-        candidates = _merge_similar_discs(component_discs + hough_discs)
+        suspicious_low_count = len(component_discs) < 6
+        geometry_valid = len(component_discs) >= 3 and validate_disc_geometry(component_discs)
+        if not geometry_valid:
+            standard_hough = _hough_disc_candidates(
+                preprocessed,
+                plate_mask,
+                white_mask,
+                core_mask,
+                min_radius,
+                max_radius,
+            )
+            hough_discs.extend(standard_hough)
+            raw_candidates.extend((disc, "hough_standard") for disc in standard_hough)
+        if suspicious_low_count:
+            fallback_detection_used = True
+            supplemental_hough = _supplemental_phone_hough_candidates(
+                base_image,
+                plate_mask,
+                white_mask,
+                core_mask,
+                min_radius,
+                max_radius,
+            )
+            hough_discs.extend(disc for disc, _ in supplemental_hough)
+            raw_candidates.extend(supplemental_hough)
 
-    if not candidates:
+    if not raw_candidates:
         return [], {
             "preprocessed": preprocessed,
             "plate_mask": plate_mask,
@@ -515,59 +652,179 @@ def detect_discs_with_debug(
             "blob_candidates": blob_discs,
             "hough_candidates": hough_discs,
             "filtered_candidates": [],
+            "raw_candidate_records": [],
+            "accepted_candidates": [],
+            "rejected_candidates": [],
+            "fallback_detection_used": fallback_detection_used,
+            "suspicious_low_count": suspicious_low_count,
             "radius_bounds": {"min_radius": round(min_radius, 2), "max_radius": round(max_radius, 2)},
         }
 
-    refined = refine_detected_discs(base_image, candidates)
-    radii = np.array([radius for _, _, radius in refined], dtype=float)
-    baseline_radius = float(np.median(radii))
     gray = cv2.cvtColor(base_image, cv2.COLOR_BGR2GRAY) if base_image.ndim == 3 else base_image.copy()
-    scored_candidates: List[tuple[DiscCircle, float]] = []
-    for disc in refined:
-        if not (baseline_radius * 0.7 <= disc[2] <= baseline_radius * 1.35):
+    scored_candidates: List[Tuple[DiscCircle, float, str, Dict[str, float]]] = []
+    rejected_candidates: List[Dict[str, Any]] = []
+    raw_candidate_records = [_candidate_record(disc, source=source, stage="raw") for disc, source in raw_candidates]
+
+    for raw_disc, source in raw_candidates:
+        disc = _refine_disc_radius(base_image, raw_disc)
+        ix = int(np.clip(round(disc[0]), 0, plate_mask.shape[1] - 1))
+        iy = int(np.clip(round(disc[1]), 0, plate_mask.shape[0] - 1))
+        if plate_mask[iy, ix] == 0:
+            rejected_candidates.append(
+                _candidate_record(disc, source=source, stage="rejected", reason="outside_plate_mask")
+            )
             continue
-        if plate_mask[
-            int(np.clip(round(disc[1]), 0, plate_mask.shape[0] - 1)),
-            int(np.clip(round(disc[0]), 0, plate_mask.shape[1] - 1)),
-        ] == 0:
+
+        metrics = _disc_candidate_metrics(gray, white_mask, core_mask, disc[0], disc[1], disc[2])
+        if metrics is None:
+            rejected_candidates.append(
+                _candidate_record(disc, source=source, stage="rejected", reason="metrics_unavailable")
+            )
             continue
+
         if dense_layout:
-            metrics = _disc_candidate_metrics(gray, white_mask, core_mask, disc[0], disc[1], disc[2])
-            if metrics is None:
-                continue
             if metrics.get("white_occupancy", 0.0) < 0.16:
+                rejected_candidates.append(
+                    _candidate_record(
+                        disc,
+                        source=source,
+                        stage="rejected",
+                        reason="low_white_occupancy",
+                        metrics=metrics,
+                    )
+                )
                 continue
             score = _disc_candidate_score(metrics, disc[2], min_radius, max_radius)
             if score < 155.0:
+                rejected_candidates.append(
+                    _candidate_record(
+                        disc,
+                        source=source,
+                        stage="rejected",
+                        score=score,
+                        reason="low_disc_score",
+                        metrics=metrics,
+                    )
+                )
                 continue
         else:
-            metrics = _disc_candidate_metrics(gray, white_mask, core_mask, disc[0], disc[1], disc[2])
-            if metrics is None:
-                continue
             if metrics.get("contrast", 0.0) < 18.0:
+                rejected_candidates.append(
+                    _candidate_record(
+                        disc,
+                        source=source,
+                        stage="rejected",
+                        reason="low_contrast",
+                        metrics=metrics,
+                    )
+                )
                 continue
-            if metrics.get("bright_fraction", 0.0) < 0.2 and metrics.get("white_occupancy", 0.0) < 0.2:
+            if metrics.get("bright_fraction", 0.0) < 0.18 and metrics.get("white_occupancy", 0.0) < 0.16:
+                rejected_candidates.append(
+                    _candidate_record(
+                        disc,
+                        source=source,
+                        stage="rejected",
+                        reason="low_disc_signal",
+                        metrics=metrics,
+                    )
+                )
                 continue
-            score = float(disc[2]) + (metrics.get("white_occupancy", 0.0) * 40.0) + (metrics.get("contrast", 0.0) * 0.25)
-        scored_candidates.append((disc, score))
+            if metrics.get("center_mean", 0.0) < 145.0 and metrics.get("white_occupancy", 0.0) < 0.34:
+                rejected_candidates.append(
+                    _candidate_record(
+                        disc,
+                        source=source,
+                        stage="rejected",
+                        reason="low_center_brightness",
+                        metrics=metrics,
+                    )
+                )
+                continue
+            score = _disc_candidate_score(metrics, disc[2], min_radius, max_radius)
+            if score < 95.0:
+                rejected_candidates.append(
+                    _candidate_record(
+                        disc,
+                        source=source,
+                        stage="rejected",
+                        score=score,
+                        reason="low_disc_score",
+                        metrics=metrics,
+                    )
+                )
+                continue
 
-    scored_candidates.sort(key=lambda item: item[1], reverse=True)
-    filtered = [disc for disc, _ in scored_candidates]
+        scored_candidates.append((disc, score, source, metrics))
 
-    if dense_layout:
-        height, width = plate_mask.shape[:2]
-        filtered = [
-            disc
-            for disc in filtered
-            if disc[0] >= max(22.0, disc[2] * 2.1)
-            and disc[1] >= max(22.0, disc[2] * 2.1)
-            and (width - disc[0]) >= max(22.0, disc[2] * 2.1)
-            and (height - disc[1]) >= max(22.0, disc[2] * 2.1)
-        ]
+    if not scored_candidates:
+        return [], {
+            "preprocessed": preprocessed,
+            "plate_mask": plate_mask,
+            "white_mask": white_mask,
+            "core_mask": core_mask,
+            "component_candidates": component_candidates,
+            "blob_candidates": blob_discs,
+            "hough_candidates": hough_discs,
+            "filtered_candidates": [],
+            "raw_candidate_records": raw_candidate_records,
+            "accepted_candidates": [],
+            "rejected_candidates": rejected_candidates,
+            "fallback_detection_used": fallback_detection_used,
+            "suspicious_low_count": suspicious_low_count,
+            "radius_bounds": {"min_radius": round(min_radius, 2), "max_radius": round(max_radius, 2)},
+        }
 
-    filtered = _merge_similar_discs(filtered)
-    filtered = sorted(filtered, key=lambda disc: (round(disc[1] / max(40.0, baseline_radius * 1.8)), disc[0]))
-    final_discs = filtered[: settings.MAX_DISCS]
+    merged_candidates, duplicate_rejections = _merge_scored_candidates(scored_candidates)
+    rejected_candidates.extend(duplicate_rejections)
+
+    baseline_pool = [disc[2] for disc, _, _, _ in merged_candidates[: max(4, min(len(merged_candidates), 10))]]
+    baseline_radius = float(np.median(np.array(baseline_pool, dtype=float))) if baseline_pool else float(min_radius)
+
+    filtered_candidates: List[Tuple[DiscCircle, float, str, Dict[str, float]]] = []
+    for disc, score, source, metrics in merged_candidates:
+        if not (baseline_radius * 0.68 <= disc[2] <= baseline_radius * 1.32):
+            rejected_candidates.append(
+                _candidate_record(
+                    disc,
+                    source=source,
+                    stage="rejected",
+                    score=score,
+                    reason="radius_outlier",
+                    metrics=metrics,
+                )
+            )
+            continue
+        if dense_layout:
+            height, width = plate_mask.shape[:2]
+            edge_margin = max(22.0, disc[2] * 2.1)
+            if not (
+                disc[0] >= edge_margin
+                and disc[1] >= edge_margin
+                and (width - disc[0]) >= edge_margin
+                and (height - disc[1]) >= edge_margin
+            ):
+                rejected_candidates.append(
+                    _candidate_record(
+                        disc,
+                        source=source,
+                        stage="rejected",
+                        score=score,
+                        reason="edge_clipped_candidate",
+                        metrics=metrics,
+                    )
+                )
+                continue
+        filtered_candidates.append((disc, score, source, metrics))
+
+    filtered_candidates = filtered_candidates[: settings.MAX_DISCS]
+    final_discs = [
+        disc
+        for disc, _, _, _ in sorted(
+            filtered_candidates,
+            key=lambda item: (round(item[0][1] / max(40.0, baseline_radius * 1.8)), item[0][0]),
+        )
+    ]
     return final_discs, {
         "preprocessed": preprocessed,
         "plate_mask": plate_mask,
@@ -577,14 +834,17 @@ def detect_discs_with_debug(
         "blob_candidates": blob_discs,
         "hough_candidates": hough_discs,
         "filtered_candidates": final_discs,
+        "raw_candidate_records": raw_candidate_records,
+        "accepted_candidates": [
+            _candidate_record(disc, source=source, stage="accepted", score=score, metrics=metrics)
+            for disc, score, source, metrics in filtered_candidates
+        ],
+        "rejected_candidates": rejected_candidates,
+        "fallback_detection_used": fallback_detection_used,
+        "suspicious_low_count": suspicious_low_count,
         "candidate_scores": [
-            {
-                "x": round(float(disc[0]), 2),
-                "y": round(float(disc[1]), 2),
-                "radius": round(float(disc[2]), 2),
-                "score": round(float(score), 2),
-            }
-            for disc, score in scored_candidates[: settings.MAX_DISCS + 8]
+            _candidate_record(disc, source=source, stage="scored", score=score, metrics=metrics)
+            for disc, score, source, metrics in merged_candidates[: settings.MAX_DISCS + 12]
         ],
         "radius_bounds": {"min_radius": round(min_radius, 2), "max_radius": round(max_radius, 2)},
     }

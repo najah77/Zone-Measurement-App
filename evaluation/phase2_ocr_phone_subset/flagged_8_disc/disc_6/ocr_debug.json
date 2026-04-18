@@ -1,0 +1,384 @@
+{
+  "observation_count": 8,
+  "observations": [
+    {
+      "source_index": 0,
+      "variant": "blackhat",
+      "angle": 35,
+      "psm": 6,
+      "raw_text": "FOUN | 4",
+      "normalized_text": "FOUN",
+      "tokens": [
+        "FOUN",
+        "F0"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "blackhat",
+      "angle": 125,
+      "psm": 6,
+      "raw_text": "4 | NO",
+      "normalized_text": "NO",
+      "tokens": [
+        "NO",
+        "N0"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "blackhat",
+      "angle": 215,
+      "psm": 6,
+      "raw_text": "LN",
+      "normalized_text": "LN",
+      "tokens": [
+        "LN"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "blackhat",
+      "angle": 305,
+      "psm": 6,
+      "raw_text": "N | 30 | WS",
+      "normalized_text": "N 30",
+      "tokens": [
+        "N",
+        "WS",
+        "W5"
+      ],
+      "strengths": [
+        30
+      ]
+    },
+    {
+      "source_index": 0,
+      "variant": "inv_otsu",
+      "angle": 35,
+      "psm": 6,
+      "raw_text": "S",
+      "normalized_text": "S",
+      "tokens": [
+        "S"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "inv_otsu",
+      "angle": 125,
+      "psm": 6,
+      "raw_text": "O6 | 1Y",
+      "normalized_text": "OG",
+      "tokens": [
+        "OG",
+        "O6",
+        "IY"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "inv_otsu",
+      "angle": 215,
+      "psm": 6,
+      "raw_text": "IS",
+      "normalized_text": "IS 15",
+      "tokens": [
+        "IS",
+        "I5"
+      ],
+      "strengths": [
+        15
+      ]
+    },
+    {
+      "source_index": 0,
+      "variant": "inv_otsu",
+      "angle": 305,
+      "psm": 6,
+      "raw_text": "AK | 30",
+      "normalized_text": "AK 30",
+      "tokens": [
+        "AK"
+      ],
+      "strengths": [
+        30
+      ]
+    }
+  ],
+  "candidate_ranking": [
+    {
+      "code": "AK",
+      "score": 0.99,
+      "exact_matches": 1,
+      "alias_matches": 0,
+      "strength_hits": 3,
+      "global_strength_matches": 2,
+      "structured_matches": 0,
+      "support_count": 3,
+      "source_count": 1,
+      "token_support": [
+        "AK",
+        "W5",
+        "WS"
+      ],
+      "best_observation": {
+        "raw_text": "AK | 30",
+        "normalized_text": "AK 30",
+        "angle": 305,
+        "variant": "inv_otsu",
+        "source_index": 0,
+        "token": "AK",
+        "reason": "exact, strength 30",
+        "strengths": [
+          30
+        ]
+      }
+    },
+    {
+      "code": "NOR",
+      "score": 0.94,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 0,
+      "global_strength_matches": 0,
+      "structured_matches": 1,
+      "support_count": 2,
+      "source_count": 1,
+      "token_support": [
+        "N0",
+        "NO"
+      ],
+      "best_observation": {
+        "raw_text": "4 | NO",
+        "normalized_text": "NO",
+        "angle": 125,
+        "variant": "blackhat",
+        "source_index": 0,
+        "token": "NO",
+        "reason": "prefix",
+        "strengths": []
+      }
+    },
+    {
+      "code": "AMK",
+      "score": 0.88,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 1,
+      "global_strength_matches": 2,
+      "structured_matches": 1,
+      "support_count": 1,
+      "source_count": 1,
+      "token_support": [
+        "AK"
+      ],
+      "best_observation": {
+        "raw_text": "AK | 30",
+        "normalized_text": "AK 30",
+        "angle": 305,
+        "variant": "inv_otsu",
+        "source_index": 0,
+        "token": "AK",
+        "reason": "outer-pair, strength 30",
+        "strengths": [
+          30
+        ]
+      }
+    },
+    {
+      "code": "DO",
+      "score": 0.855,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 2,
+      "global_strength_matches": 2,
+      "structured_matches": 0,
+      "support_count": 7,
+      "source_count": 1,
+      "token_support": [
+        "AK",
+        "F0",
+        "N0",
+        "NO",
+        "O6",
+        "OG"
+      ],
+      "best_observation": {
+        "raw_text": "4 | NO",
+        "normalized_text": "NO",
+        "angle": 125,
+        "variant": "blackhat",
+        "source_index": 0,
+        "token": "NO",
+        "reason": "partial",
+        "strengths": []
+      }
+    },
+    {
+      "code": "TE",
+      "score": 0.791,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 3,
+      "global_strength_matches": 2,
+      "structured_matches": 0,
+      "support_count": 5,
+      "source_count": 1,
+      "token_support": [
+        "AK",
+        "IY",
+        "LN",
+        "W5",
+        "WS"
+      ],
+      "best_observation": {
+        "raw_text": "N | 30 | WS",
+        "normalized_text": "N 30",
+        "angle": 305,
+        "variant": "blackhat",
+        "source_index": 0,
+        "token": "WS",
+        "reason": "partial, strength 30",
+        "strengths": [
+          30
+        ]
+      }
+    },
+    {
+      "code": "TGC",
+      "score": 0.72,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 2,
+      "global_strength_matches": 1,
+      "structured_matches": 0,
+      "support_count": 3,
+      "source_count": 1,
+      "token_support": [
+        "I5",
+        "IS",
+        "OG"
+      ],
+      "best_observation": {
+        "raw_text": "IS",
+        "normalized_text": "IS 15",
+        "angle": 215,
+        "variant": "inv_otsu",
+        "source_index": 0,
+        "token": "IS",
+        "reason": "partial, strength 15",
+        "strengths": [
+          15
+        ]
+      }
+    },
+    {
+      "code": "FOX",
+      "score": 0.705,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 0,
+      "global_strength_matches": 2,
+      "structured_matches": 0,
+      "support_count": 2,
+      "source_count": 1,
+      "token_support": [
+        "F0",
+        "FOUN"
+      ],
+      "best_observation": {
+        "raw_text": "FOUN | 4",
+        "normalized_text": "FOUN",
+        "angle": 35,
+        "variant": "blackhat",
+        "source_index": 0,
+        "token": "FOUN",
+        "reason": "partial",
+        "strengths": []
+      }
+    },
+    {
+      "code": "AMC",
+      "score": 0.676,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 1,
+      "global_strength_matches": 2,
+      "structured_matches": 0,
+      "support_count": 1,
+      "source_count": 1,
+      "token_support": [
+        "AK"
+      ],
+      "best_observation": {
+        "raw_text": "AK | 30",
+        "normalized_text": "AK 30",
+        "angle": 305,
+        "variant": "inv_otsu",
+        "source_index": 0,
+        "token": "AK",
+        "reason": "partial, strength 30",
+        "strengths": [
+          30
+        ]
+      }
+    },
+    {
+      "code": "ATM",
+      "score": 0.676,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 1,
+      "global_strength_matches": 2,
+      "structured_matches": 0,
+      "support_count": 1,
+      "source_count": 1,
+      "token_support": [
+        "AK"
+      ],
+      "best_observation": {
+        "raw_text": "AK | 30",
+        "normalized_text": "AK 30",
+        "angle": 305,
+        "variant": "inv_otsu",
+        "source_index": 0,
+        "token": "AK",
+        "reason": "partial, strength 30",
+        "strengths": [
+          30
+        ]
+      }
+    },
+    {
+      "code": "FOS",
+      "score": 0.655,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 0,
+      "global_strength_matches": 0,
+      "structured_matches": 0,
+      "support_count": 2,
+      "source_count": 1,
+      "token_support": [
+        "F0",
+        "FOUN"
+      ],
+      "best_observation": {
+        "raw_text": "FOUN | 4",
+        "normalized_text": "FOUN",
+        "angle": 35,
+        "variant": "blackhat",
+        "source_index": 0,
+        "token": "FOUN",
+        "reason": "partial",
+        "strengths": []
+      }
+    }
+  ]
+}

@@ -1,0 +1,414 @@
+{
+  "observation_count": 12,
+  "observations": [
+    {
+      "source_index": 0,
+      "variant": "blackhat",
+      "angle": 33,
+      "psm": 6,
+      "raw_text": "VS",
+      "normalized_text": "VS",
+      "tokens": [
+        "VS",
+        "V5"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "blackhat",
+      "angle": 123,
+      "psm": 6,
+      "raw_text": "FN | VV",
+      "normalized_text": "FN",
+      "tokens": [
+        "FN",
+        "VV"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "blackhat",
+      "angle": 213,
+      "psm": 6,
+      "raw_text": "FN | VV",
+      "normalized_text": "FN",
+      "tokens": [
+        "FN",
+        "VV"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "blackhat",
+      "angle": 303,
+      "psm": 6,
+      "raw_text": "8 | VS",
+      "normalized_text": "VS",
+      "tokens": [
+        "VS",
+        "V5"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "inv_otsu",
+      "angle": 213,
+      "psm": 6,
+      "raw_text": "C",
+      "normalized_text": "C",
+      "tokens": [
+        "C"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "blackhat",
+      "angle": 33,
+      "psm": 11,
+      "raw_text": "VS",
+      "normalized_text": "VS",
+      "tokens": [
+        "VS",
+        "V5"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "blackhat",
+      "angle": 123,
+      "psm": 11,
+      "raw_text": "W2 |  | VV",
+      "normalized_text": "WZ 2",
+      "tokens": [
+        "WZ",
+        "W2",
+        "VV"
+      ],
+      "strengths": [
+        2
+      ]
+    },
+    {
+      "source_index": 0,
+      "variant": "blackhat",
+      "angle": 213,
+      "psm": 11,
+      "raw_text": "VV",
+      "normalized_text": "VV",
+      "tokens": [
+        "VV"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "blackhat",
+      "angle": 303,
+      "psm": 11,
+      "raw_text": "6 |  | VS",
+      "normalized_text": "VS",
+      "tokens": [
+        "VS",
+        "V5"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "inv_otsu",
+      "angle": 33,
+      "psm": 11,
+      "raw_text": "TE",
+      "normalized_text": "TE",
+      "tokens": [
+        "TE"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "inv_otsu",
+      "angle": 213,
+      "psm": 11,
+      "raw_text": "C |  | 31",
+      "normalized_text": "C",
+      "tokens": [
+        "C"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "inv_otsu",
+      "angle": 303,
+      "psm": 11,
+      "raw_text": "S",
+      "normalized_text": "S",
+      "tokens": [
+        "S"
+      ],
+      "strengths": []
+    }
+  ],
+  "candidate_ranking": [
+    {
+      "code": "TE",
+      "score": 0.99,
+      "exact_matches": 1,
+      "alias_matches": 0,
+      "strength_hits": 0,
+      "global_strength_matches": 0,
+      "structured_matches": 0,
+      "support_count": 6,
+      "source_count": 1,
+      "token_support": [
+        "TE",
+        "VS",
+        "VV"
+      ],
+      "best_observation": {
+        "raw_text": "TE",
+        "normalized_text": "TE",
+        "angle": 33,
+        "variant": "inv_otsu",
+        "source_index": 0,
+        "token": "TE",
+        "reason": "exact",
+        "strengths": []
+      }
+    },
+    {
+      "code": "TEC",
+      "score": 0.848,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 0,
+      "global_strength_matches": 0,
+      "structured_matches": 1,
+      "support_count": 1,
+      "source_count": 1,
+      "token_support": [
+        "TE"
+      ],
+      "best_observation": {
+        "raw_text": "TE",
+        "normalized_text": "TE",
+        "angle": 33,
+        "variant": "inv_otsu",
+        "source_index": 0,
+        "token": "TE",
+        "reason": "prefix",
+        "strengths": []
+      }
+    },
+    {
+      "code": "VA",
+      "score": 0.831,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 0,
+      "global_strength_matches": 0,
+      "structured_matches": 0,
+      "support_count": 12,
+      "source_count": 1,
+      "token_support": [
+        "V5",
+        "VS",
+        "VV"
+      ],
+      "best_observation": {
+        "raw_text": "VS",
+        "normalized_text": "VS",
+        "angle": 33,
+        "variant": "blackhat",
+        "source_index": 0,
+        "token": "VS",
+        "reason": "partial",
+        "strengths": []
+      }
+    },
+    {
+      "code": "CN",
+      "score": 0.807,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 0,
+      "global_strength_matches": 0,
+      "structured_matches": 0,
+      "support_count": 7,
+      "source_count": 1,
+      "token_support": [
+        "FN",
+        "VS",
+        "VV"
+      ],
+      "best_observation": {
+        "raw_text": "FN | VV",
+        "normalized_text": "FN",
+        "angle": 123,
+        "variant": "blackhat",
+        "source_index": 0,
+        "token": "FN",
+        "reason": "partial",
+        "strengths": []
+      }
+    },
+    {
+      "code": "FF",
+      "score": 0.741,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 0,
+      "global_strength_matches": 0,
+      "structured_matches": 0,
+      "support_count": 2,
+      "source_count": 1,
+      "token_support": [
+        "FN"
+      ],
+      "best_observation": {
+        "raw_text": "FN | VV",
+        "normalized_text": "FN",
+        "angle": 123,
+        "variant": "blackhat",
+        "source_index": 0,
+        "token": "FN",
+        "reason": "partial",
+        "strengths": []
+      }
+    },
+    {
+      "code": "AM",
+      "score": 0.699,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 0,
+      "global_strength_matches": 0,
+      "structured_matches": 0,
+      "support_count": 7,
+      "source_count": 1,
+      "token_support": [
+        "FN",
+        "VS",
+        "VV"
+      ],
+      "best_observation": {
+        "raw_text": "FN | VV",
+        "normalized_text": "FN",
+        "angle": 123,
+        "variant": "blackhat",
+        "source_index": 0,
+        "token": "FN",
+        "reason": "partial",
+        "strengths": []
+      }
+    },
+    {
+      "code": "CLI",
+      "score": 0.642,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 3,
+      "global_strength_matches": 1,
+      "structured_matches": 0,
+      "support_count": 3,
+      "source_count": 1,
+      "token_support": [
+        "VV",
+        "W2",
+        "WZ"
+      ],
+      "best_observation": {
+        "raw_text": "W2 |  | VV",
+        "normalized_text": "WZ 2",
+        "angle": 123,
+        "variant": "blackhat",
+        "source_index": 0,
+        "token": "WZ",
+        "reason": "partial, strength 2",
+        "strengths": [
+          2
+        ]
+      }
+    },
+    {
+      "code": "P",
+      "score": 0.623,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 0,
+      "global_strength_matches": 0,
+      "structured_matches": 0,
+      "support_count": 3,
+      "source_count": 1,
+      "token_support": [
+        "C",
+        "S"
+      ],
+      "best_observation": {
+        "raw_text": "C",
+        "normalized_text": "C",
+        "angle": 213,
+        "variant": "inv_otsu",
+        "source_index": 0,
+        "token": "C",
+        "reason": "partial",
+        "strengths": []
+      }
+    },
+    {
+      "code": "FEP",
+      "score": 0.575,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 0,
+      "global_strength_matches": 0,
+      "structured_matches": 0,
+      "support_count": 2,
+      "source_count": 1,
+      "token_support": [
+        "FN"
+      ],
+      "best_observation": {
+        "raw_text": "FN | VV",
+        "normalized_text": "FN",
+        "angle": 123,
+        "variant": "blackhat",
+        "source_index": 0,
+        "token": "FN",
+        "reason": "partial",
+        "strengths": []
+      }
+    },
+    {
+      "code": "FOX",
+      "score": 0.575,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 0,
+      "global_strength_matches": 0,
+      "structured_matches": 0,
+      "support_count": 2,
+      "source_count": 1,
+      "token_support": [
+        "FN"
+      ],
+      "best_observation": {
+        "raw_text": "FN | VV",
+        "normalized_text": "FN",
+        "angle": 123,
+        "variant": "blackhat",
+        "source_index": 0,
+        "token": "FN",
+        "reason": "partial",
+        "strengths": []
+      }
+    }
+  ]
+}

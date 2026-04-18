@@ -15,6 +15,7 @@ import numpy as np
 from app.core.config import settings
 from app.evaluation.dataset import DatasetImageRecord, GroundTruthRow, index_test_images
 from app.models.schemas import AnalysisResponse, DiscMeasurement
+from app.ml.ocr_classifier import build_ocr_debug_artifacts, predict_disc_class_ocr
 from app.services.ast_processor import run_ast_analysis
 from app.utils.disc_detector import detect_discs_with_debug
 from app.utils.disc_roi import extract_disc_roi
@@ -113,6 +114,52 @@ def _build_disc_overlay(image: np.ndarray, discs: list[tuple[float, float, float
             overlay,
             f"D{index}",
             (center[0] - 16, max(18, center[1] - int(radius) - 8)),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.45,
+            (255, 255, 255),
+            2,
+            cv2.LINE_AA,
+        )
+    return overlay
+
+
+def _build_plate_boundary_overlay(image: np.ndarray, plate_detection) -> np.ndarray:
+    overlay = image.copy()
+    if plate_detection is None:
+        return overlay
+    if plate_detection.shape == "rectangle" and plate_detection.bounding_box is not None:
+        box = plate_detection.bounding_box
+        cv2.rectangle(
+            overlay,
+            (int(round(box.x1)), int(round(box.y1))),
+            (int(round(box.x2)), int(round(box.y2))),
+            (255, 255, 0),
+            3,
+        )
+    else:
+        center = (int(round(plate_detection.center.x)), int(round(plate_detection.center.y)))
+        cv2.circle(overlay, center, int(round(plate_detection.radius_px)), (255, 255, 0), 3)
+    return overlay
+
+
+def _build_disc_detection_debug_overlay(
+    image: np.ndarray,
+    disc_debug: dict,
+) -> np.ndarray:
+    overlay = image.copy()
+    for record in disc_debug.get("raw_candidate_records", []):
+        center = (int(round(record["x"])), int(round(record["y"])))
+        cv2.circle(overlay, center, int(round(record["radius"])), (0, 220, 255), 1)
+    for record in disc_debug.get("rejected_candidates", []):
+        center = (int(round(record["x"])), int(round(record["y"])))
+        cv2.circle(overlay, center, int(round(record["radius"])), (0, 0, 255), 1)
+    for index, record in enumerate(disc_debug.get("accepted_candidates", []), start=1):
+        center = (int(round(record["x"])), int(round(record["y"])))
+        cv2.circle(overlay, center, int(round(record["radius"])), (0, 255, 0), 2)
+        cv2.putText(
+            overlay,
+            f"D{index}",
+            (center[0] - 16, max(18, center[1] - int(round(record["radius"])) - 8)),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.45,
             (255, 255, 255),
@@ -320,7 +367,9 @@ def _evaluate_record(
     _save_image(images_dir / "input.png", image)
     _save_image(images_dir / "plate_crop.png", plate_image)
     _save_image(images_dir / "preprocessed.png", preprocessed)
+    _save_image(images_dir / "plate_boundary_overlay.png", _build_plate_boundary_overlay(plate_image, plate_detection))
     _save_image(images_dir / "disc_overlay.png", _build_disc_overlay(plate_image, discs))
+    _save_image(images_dir / "disc_detection_overlay.png", _build_disc_detection_debug_overlay(plate_image, disc_debug))
     _save_image(images_dir / "final_annotated.png", _build_plate_overlay(plate_image, analysis.results))
     if record.measured_reference_path:
         reference = cv2.imread(record.measured_reference_path)
@@ -337,6 +386,13 @@ def _evaluate_record(
         relaxed_crop = extract_disc_roi(plate_image, result.center.x, result.center.y, result.disc_radius_px, expand_ratio=0.30, mask_scale=0.98)
         _save_image(disc_entry_dir / "ocr_crop.png", crop)
         _save_image(disc_entry_dir / "ocr_crop_relaxed.png", relaxed_crop)
+        ocr_debug_prediction = predict_disc_class_ocr(crop, fallback_images=[relaxed_crop], include_debug=True)
+        ocr_debug_payload = dict(ocr_debug_prediction.get("ocr_debug") or {})
+        for artifact_name, artifact_image in build_ocr_debug_artifacts(crop).items():
+            _save_image(disc_entry_dir / f"ocr_{artifact_name}.png", artifact_image)
+        for artifact_name, artifact_image in build_ocr_debug_artifacts(relaxed_crop).items():
+            _save_image(disc_entry_dir / f"ocr_relaxed_{artifact_name}.png", artifact_image)
+        _write_json(disc_entry_dir / "ocr_debug.json", ocr_debug_payload)
 
         zone_debug = {}
         if index < len(discs):
@@ -367,6 +423,7 @@ def _evaluate_record(
                     for key, value in zone_debug.items()
                     if not isinstance(value, np.ndarray)
                 },
+                "ocr_debug": ocr_debug_payload,
                 "expected_gt_mm": expected_gt_mm,
             }
         )
@@ -433,7 +490,14 @@ def _evaluate_record(
         "disc_detection_debug": {
             "component_candidate_count": len(disc_debug.get("component_candidates", [])),
             "hough_candidate_count": len(disc_debug.get("hough_candidates", [])),
+            "raw_candidate_count": len(disc_debug.get("raw_candidate_records", [])),
+            "accepted_candidate_count": len(disc_debug.get("accepted_candidates", [])),
+            "rejected_candidate_count": len(disc_debug.get("rejected_candidates", [])),
+            "fallback_detection_used": bool(disc_debug.get("fallback_detection_used", False)),
+            "suspicious_low_count": bool(disc_debug.get("suspicious_low_count", False)),
             "radius_bounds": disc_debug.get("radius_bounds", {}),
+            "accepted_candidates": disc_debug.get("accepted_candidates", []),
+            "rejected_candidates": disc_debug.get("rejected_candidates", []),
         },
     }
 

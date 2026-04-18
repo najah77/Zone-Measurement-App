@@ -1,0 +1,703 @@
+{
+  "observation_count": 33,
+  "observations": [
+    {
+      "source_index": 0,
+      "variant": "blackhat",
+      "angle": 41,
+      "psm": 6,
+      "raw_text": "YN | I | WV",
+      "normalized_text": "YN",
+      "tokens": [
+        "YN",
+        "I",
+        "WV"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "blackhat",
+      "angle": 131,
+      "psm": 6,
+      "raw_text": "N | TV",
+      "normalized_text": "N",
+      "tokens": [
+        "N",
+        "TV"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "blackhat",
+      "angle": 311,
+      "psm": 6,
+      "raw_text": "OCOUN | VY",
+      "normalized_text": "OCOUN",
+      "tokens": [
+        "OCOUN",
+        "O0",
+        "OC0",
+        "VY"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "inv_otsu",
+      "angle": 41,
+      "psm": 6,
+      "raw_text": "O | I",
+      "normalized_text": "O",
+      "tokens": [
+        "O",
+        "I"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "inv_otsu",
+      "angle": 131,
+      "psm": 6,
+      "raw_text": "TY | A",
+      "normalized_text": "TY",
+      "tokens": [
+        "TY",
+        "A"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "inv_otsu",
+      "angle": 311,
+      "psm": 6,
+      "raw_text": "TZ | 16",
+      "normalized_text": "TZ",
+      "tokens": [
+        "TZ"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "blackhat",
+      "angle": 131,
+      "psm": 11,
+      "raw_text": "LL |  | 6 |  | Z1",
+      "normalized_text": "LL",
+      "tokens": [
+        "LL",
+        "L1",
+        "ZI",
+        "Z1"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "blackhat",
+      "angle": 311,
+      "psm": 11,
+      "raw_text": "T2 |  | 4 |  | 11",
+      "normalized_text": "TZ",
+      "tokens": [
+        "TZ",
+        "T2"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "inv_otsu",
+      "angle": 41,
+      "psm": 11,
+      "raw_text": "O |  | I",
+      "normalized_text": "O",
+      "tokens": [
+        "O",
+        "I"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "inv_otsu",
+      "angle": 131,
+      "psm": 11,
+      "raw_text": "906 |  | 4Z",
+      "normalized_text": "AZ",
+      "tokens": [
+        "AZ"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "inv_otsu",
+      "angle": 221,
+      "psm": 11,
+      "raw_text": "J",
+      "normalized_text": "J",
+      "tokens": [
+        "J"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "inv_otsu",
+      "angle": 311,
+      "psm": 11,
+      "raw_text": "TZ |  | 0",
+      "normalized_text": "TZ",
+      "tokens": [
+        "TZ"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "polar_strip",
+      "angle": 0,
+      "psm": 7,
+      "raw_text": "F",
+      "normalized_text": "F",
+      "tokens": [
+        "F"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "polar_strip",
+      "angle": 90,
+      "psm": 7,
+      "raw_text": "I",
+      "normalized_text": "I",
+      "tokens": [
+        "I"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "polar_strip",
+      "angle": 270,
+      "psm": 7,
+      "raw_text": "P",
+      "normalized_text": "P",
+      "tokens": [
+        "P"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "adaptive",
+      "angle": 41,
+      "psm": 11,
+      "raw_text": "VN |  | 4",
+      "normalized_text": "VN",
+      "tokens": [
+        "VN"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "adaptive",
+      "angle": 131,
+      "psm": 11,
+      "raw_text": "YN |  | VS",
+      "normalized_text": "YN",
+      "tokens": [
+        "YN",
+        "VS",
+        "V5"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "adaptive",
+      "angle": 221,
+      "psm": 11,
+      "raw_text": "SS",
+      "normalized_text": "SS",
+      "tokens": [
+        "SS",
+        "S5"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "adaptive",
+      "angle": 311,
+      "psm": 11,
+      "raw_text": "VN |  | VS",
+      "normalized_text": "VN",
+      "tokens": [
+        "VN",
+        "VS",
+        "V5"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "adaptive",
+      "angle": 31,
+      "psm": 6,
+      "raw_text": "WJ",
+      "normalized_text": "WJ",
+      "tokens": [
+        "WJ"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "adaptive",
+      "angle": 31,
+      "psm": 11,
+      "raw_text": "LS",
+      "normalized_text": "LS 15",
+      "tokens": [
+        "LS",
+        "L5"
+      ],
+      "strengths": [
+        15
+      ]
+    },
+    {
+      "source_index": 0,
+      "variant": "adaptive",
+      "angle": 51,
+      "psm": 11,
+      "raw_text": "VN |  | NS",
+      "normalized_text": "VN",
+      "tokens": [
+        "VN",
+        "NS",
+        "N5"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "adaptive",
+      "angle": 211,
+      "psm": 11,
+      "raw_text": "V",
+      "normalized_text": "V",
+      "tokens": [
+        "V"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "adaptive",
+      "angle": 231,
+      "psm": 11,
+      "raw_text": "CE",
+      "normalized_text": "CE",
+      "tokens": [
+        "CE"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "sharpened",
+      "angle": 131,
+      "psm": 6,
+      "raw_text": "V",
+      "normalized_text": "V",
+      "tokens": [
+        "V"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "sharpened",
+      "angle": 131,
+      "psm": 11,
+      "raw_text": "HH",
+      "normalized_text": "HH",
+      "tokens": [
+        "HH"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "sharpened",
+      "angle": 31,
+      "psm": 6,
+      "raw_text": "7 | N",
+      "normalized_text": "N",
+      "tokens": [
+        "N"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "sharpened",
+      "angle": 211,
+      "psm": 6,
+      "raw_text": "S",
+      "normalized_text": "S",
+      "tokens": [
+        "S"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 1,
+      "variant": "blackhat",
+      "angle": 43,
+      "psm": 6,
+      "raw_text": "L | VS",
+      "normalized_text": "L",
+      "tokens": [
+        "L",
+        "VS",
+        "V5"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 1,
+      "variant": "blackhat",
+      "angle": 313,
+      "psm": 6,
+      "raw_text": "YN",
+      "normalized_text": "YN",
+      "tokens": [
+        "YN"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 1,
+      "variant": "inv_otsu",
+      "angle": 43,
+      "psm": 6,
+      "raw_text": "O",
+      "normalized_text": "O",
+      "tokens": [
+        "O"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 1,
+      "variant": "inv_otsu",
+      "angle": 223,
+      "psm": 6,
+      "raw_text": "LL",
+      "normalized_text": "LL",
+      "tokens": [
+        "LL",
+        "L1"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 1,
+      "variant": "inv_otsu",
+      "angle": 313,
+      "psm": 6,
+      "raw_text": "4 | TZP | W00",
+      "normalized_text": "TZP",
+      "tokens": [
+        "TZP",
+        "WOO",
+        "W00",
+        "WO0"
+      ],
+      "strengths": []
+    }
+  ],
+  "candidate_ranking": [
+    {
+      "code": "TZP",
+      "score": 0.99,
+      "exact_matches": 1,
+      "alias_matches": 0,
+      "strength_hits": 0,
+      "global_strength_matches": 0,
+      "structured_matches": 3,
+      "support_count": 7,
+      "source_count": 2,
+      "token_support": [
+        "T2",
+        "TV",
+        "TY",
+        "TZ",
+        "TZP"
+      ],
+      "best_observation": {
+        "raw_text": "4 | TZP | W00",
+        "normalized_text": "TZP",
+        "angle": 313,
+        "variant": "inv_otsu",
+        "source_index": 1,
+        "token": "TZP",
+        "reason": "exact",
+        "strengths": []
+      }
+    },
+    {
+      "code": "AZM",
+      "score": 0.94,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 1,
+      "global_strength_matches": 1,
+      "structured_matches": 1,
+      "support_count": 2,
+      "source_count": 1,
+      "token_support": [
+        "AZ",
+        "LS"
+      ],
+      "best_observation": {
+        "raw_text": "906 |  | 4Z",
+        "normalized_text": "AZ",
+        "angle": 131,
+        "variant": "inv_otsu",
+        "source_index": 0,
+        "token": "AZ",
+        "reason": "prefix",
+        "strengths": []
+      }
+    },
+    {
+      "code": "TPZ",
+      "score": 0.94,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 0,
+      "global_strength_matches": 0,
+      "structured_matches": 3,
+      "support_count": 6,
+      "source_count": 2,
+      "token_support": [
+        "TV",
+        "TY",
+        "TZ",
+        "TZP"
+      ],
+      "best_observation": {
+        "raw_text": "T2 |  | 4 |  | 11",
+        "normalized_text": "TZ",
+        "angle": 311,
+        "variant": "blackhat",
+        "source_index": 0,
+        "token": "TZ",
+        "reason": "outer-pair",
+        "strengths": []
+      }
+    },
+    {
+      "code": "TOP",
+      "score": 0.855,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 0,
+      "global_strength_matches": 0,
+      "structured_matches": 0,
+      "support_count": 5,
+      "source_count": 2,
+      "token_support": [
+        "TV",
+        "TY",
+        "TZ",
+        "TZP"
+      ],
+      "best_observation": {
+        "raw_text": "4 | TZP | W00",
+        "normalized_text": "TZP",
+        "angle": 313,
+        "variant": "inv_otsu",
+        "source_index": 1,
+        "token": "TZP",
+        "reason": "partial",
+        "strengths": []
+      }
+    },
+    {
+      "code": "VA",
+      "score": 0.851,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 0,
+      "global_strength_matches": 0,
+      "structured_matches": 0,
+      "support_count": 13,
+      "source_count": 2,
+      "token_support": [
+        "V5",
+        "VN",
+        "VS",
+        "VY",
+        "YN"
+      ],
+      "best_observation": {
+        "raw_text": "OCOUN | VY",
+        "normalized_text": "OCOUN",
+        "angle": 311,
+        "variant": "blackhat",
+        "source_index": 0,
+        "token": "VY",
+        "reason": "partial",
+        "strengths": []
+      }
+    },
+    {
+      "code": "TE",
+      "score": 0.847,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 0,
+      "global_strength_matches": 0,
+      "structured_matches": 0,
+      "support_count": 11,
+      "source_count": 2,
+      "token_support": [
+        "CE",
+        "L1",
+        "LL",
+        "T2",
+        "TV",
+        "TY"
+      ],
+      "best_observation": {
+        "raw_text": "N | TV",
+        "normalized_text": "N",
+        "angle": 131,
+        "variant": "blackhat",
+        "source_index": 0,
+        "token": "TV",
+        "reason": "partial",
+        "strengths": []
+      }
+    },
+    {
+      "code": "CAZ",
+      "score": 0.843,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 0,
+      "global_strength_matches": 0,
+      "structured_matches": 1,
+      "support_count": 2,
+      "source_count": 1,
+      "token_support": [
+        "AZ",
+        "CE"
+      ],
+      "best_observation": {
+        "raw_text": "906 |  | 4Z",
+        "normalized_text": "AZ",
+        "angle": 131,
+        "variant": "inv_otsu",
+        "source_index": 0,
+        "token": "AZ",
+        "reason": "suffix",
+        "strengths": []
+      }
+    },
+    {
+      "code": "CN",
+      "score": 0.843,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 0,
+      "global_strength_matches": 0,
+      "structured_matches": 0,
+      "support_count": 8,
+      "source_count": 2,
+      "token_support": [
+        "CE",
+        "VN",
+        "VS",
+        "YN"
+      ],
+      "best_observation": {
+        "raw_text": "YN | I | WV",
+        "normalized_text": "YN",
+        "angle": 41,
+        "variant": "blackhat",
+        "source_index": 0,
+        "token": "YN",
+        "reason": "partial",
+        "strengths": []
+      }
+    },
+    {
+      "code": "P",
+      "score": 0.84,
+      "exact_matches": 1,
+      "alias_matches": 0,
+      "strength_hits": 0,
+      "global_strength_matches": 0,
+      "structured_matches": 0,
+      "support_count": 17,
+      "source_count": 2,
+      "token_support": [
+        "A",
+        "F",
+        "I",
+        "J",
+        "L",
+        "N"
+      ],
+      "best_observation": {
+        "raw_text": "P",
+        "normalized_text": "P",
+        "angle": 270,
+        "variant": "polar_strip",
+        "source_index": 0,
+        "token": "P",
+        "reason": "exact",
+        "strengths": []
+      }
+    },
+    {
+      "code": "LZD",
+      "score": 0.816,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 0,
+      "global_strength_matches": 0,
+      "structured_matches": 0,
+      "support_count": 6,
+      "source_count": 2,
+      "token_support": [
+        "LL",
+        "TZ",
+        "TZP"
+      ],
+      "best_observation": {
+        "raw_text": "4 | TZP | W00",
+        "normalized_text": "TZP",
+        "angle": 313,
+        "variant": "inv_otsu",
+        "source_index": 1,
+        "token": "TZP",
+        "reason": "partial",
+        "strengths": []
+      }
+    }
+  ]
+}

@@ -1,0 +1,344 @@
+{
+  "observation_count": 7,
+  "observations": [
+    {
+      "source_index": 0,
+      "variant": "blackhat",
+      "angle": 45,
+      "psm": 6,
+      "raw_text": "VN",
+      "normalized_text": "VN",
+      "tokens": [
+        "VN"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "blackhat",
+      "angle": 135,
+      "psm": 6,
+      "raw_text": "SS",
+      "normalized_text": "SS",
+      "tokens": [
+        "SS",
+        "S5"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "blackhat",
+      "angle": 315,
+      "psm": 6,
+      "raw_text": "VN",
+      "normalized_text": "VN",
+      "tokens": [
+        "VN"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "inv_otsu",
+      "angle": 45,
+      "psm": 6,
+      "raw_text": "7 | 43N",
+      "normalized_text": "AN",
+      "tokens": [
+        "AN",
+        "A3"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "inv_otsu",
+      "angle": 135,
+      "psm": 6,
+      "raw_text": "S Q",
+      "normalized_text": "S",
+      "tokens": [
+        "S",
+        "Q"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "inv_otsu",
+      "angle": 225,
+      "psm": 6,
+      "raw_text": "NET",
+      "normalized_text": "NET",
+      "tokens": [
+        "NET",
+        "N1",
+        "NE1"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "inv_otsu",
+      "angle": 315,
+      "psm": 6,
+      "raw_text": "AN",
+      "normalized_text": "AN",
+      "tokens": [
+        "AN"
+      ],
+      "strengths": []
+    }
+  ],
+  "candidate_ranking": [
+    {
+      "code": "NET",
+      "score": 0.99,
+      "exact_matches": 1,
+      "alias_matches": 0,
+      "strength_hits": 0,
+      "global_strength_matches": 0,
+      "structured_matches": 0,
+      "support_count": 2,
+      "source_count": 1,
+      "token_support": [
+        "NE1",
+        "NET"
+      ],
+      "best_observation": {
+        "raw_text": "NET",
+        "normalized_text": "NET",
+        "angle": 225,
+        "variant": "inv_otsu",
+        "source_index": 0,
+        "token": "NET",
+        "reason": "exact",
+        "strengths": []
+      }
+    },
+    {
+      "code": "KAN",
+      "score": 0.94,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 0,
+      "global_strength_matches": 0,
+      "structured_matches": 2,
+      "support_count": 2,
+      "source_count": 1,
+      "token_support": [
+        "AN"
+      ],
+      "best_observation": {
+        "raw_text": "7 | 43N",
+        "normalized_text": "AN",
+        "angle": 45,
+        "variant": "inv_otsu",
+        "source_index": 0,
+        "token": "AN",
+        "reason": "suffix",
+        "strengths": []
+      }
+    },
+    {
+      "code": "CN",
+      "score": 0.804,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 0,
+      "global_strength_matches": 0,
+      "structured_matches": 0,
+      "support_count": 4,
+      "source_count": 1,
+      "token_support": [
+        "AN",
+        "VN"
+      ],
+      "best_observation": {
+        "raw_text": "VN",
+        "normalized_text": "VN",
+        "angle": 45,
+        "variant": "blackhat",
+        "source_index": 0,
+        "token": "VN",
+        "reason": "partial",
+        "strengths": []
+      }
+    },
+    {
+      "code": "AK",
+      "score": 0.751,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 0,
+      "global_strength_matches": 0,
+      "structured_matches": 0,
+      "support_count": 3,
+      "source_count": 1,
+      "token_support": [
+        "A3",
+        "AN"
+      ],
+      "best_observation": {
+        "raw_text": "7 | 43N",
+        "normalized_text": "AN",
+        "angle": 45,
+        "variant": "inv_otsu",
+        "source_index": 0,
+        "token": "AN",
+        "reason": "partial",
+        "strengths": []
+      }
+    },
+    {
+      "code": "VA",
+      "score": 0.741,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 0,
+      "global_strength_matches": 0,
+      "structured_matches": 0,
+      "support_count": 2,
+      "source_count": 1,
+      "token_support": [
+        "VN"
+      ],
+      "best_observation": {
+        "raw_text": "VN",
+        "normalized_text": "VN",
+        "angle": 45,
+        "variant": "blackhat",
+        "source_index": 0,
+        "token": "VN",
+        "reason": "partial",
+        "strengths": []
+      }
+    },
+    {
+      "code": "AM",
+      "score": 0.74,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 0,
+      "global_strength_matches": 0,
+      "structured_matches": 0,
+      "support_count": 5,
+      "source_count": 1,
+      "token_support": [
+        "A3",
+        "AN",
+        "VN"
+      ],
+      "best_observation": {
+        "raw_text": "7 | 43N",
+        "normalized_text": "AN",
+        "angle": 45,
+        "variant": "inv_otsu",
+        "source_index": 0,
+        "token": "AN",
+        "reason": "partial",
+        "strengths": []
+      }
+    },
+    {
+      "code": "MEM",
+      "score": 0.708,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 0,
+      "global_strength_matches": 0,
+      "structured_matches": 0,
+      "support_count": 2,
+      "source_count": 1,
+      "token_support": [
+        "NE1",
+        "NET"
+      ],
+      "best_observation": {
+        "raw_text": "NET",
+        "normalized_text": "NET",
+        "angle": 225,
+        "variant": "inv_otsu",
+        "source_index": 0,
+        "token": "NET",
+        "reason": "partial",
+        "strengths": []
+      }
+    },
+    {
+      "code": "NIT",
+      "score": 0.689,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 0,
+      "global_strength_matches": 0,
+      "structured_matches": 0,
+      "support_count": 1,
+      "source_count": 1,
+      "token_support": [
+        "NET"
+      ],
+      "best_observation": {
+        "raw_text": "NET",
+        "normalized_text": "NET",
+        "angle": 225,
+        "variant": "inv_otsu",
+        "source_index": 0,
+        "token": "NET",
+        "reason": "partial",
+        "strengths": []
+      }
+    },
+    {
+      "code": "AMC",
+      "score": 0.644,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 0,
+      "global_strength_matches": 0,
+      "structured_matches": 0,
+      "support_count": 3,
+      "source_count": 1,
+      "token_support": [
+        "AN",
+        "VN"
+      ],
+      "best_observation": {
+        "raw_text": "AN",
+        "normalized_text": "AN",
+        "angle": 315,
+        "variant": "inv_otsu",
+        "source_index": 0,
+        "token": "AN",
+        "reason": "partial",
+        "strengths": []
+      }
+    },
+    {
+      "code": "AMP",
+      "score": 0.644,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 0,
+      "global_strength_matches": 0,
+      "structured_matches": 0,
+      "support_count": 3,
+      "source_count": 1,
+      "token_support": [
+        "AN",
+        "VN"
+      ],
+      "best_observation": {
+        "raw_text": "AN",
+        "normalized_text": "AN",
+        "angle": 315,
+        "variant": "inv_otsu",
+        "source_index": 0,
+        "token": "AN",
+        "reason": "partial",
+        "strengths": []
+      }
+    }
+  ]
+}

@@ -1,0 +1,373 @@
+{
+  "observation_count": 8,
+  "observations": [
+    {
+      "source_index": 0,
+      "variant": "blackhat",
+      "angle": 50,
+      "psm": 6,
+      "raw_text": "VN | FOX | 4",
+      "normalized_text": "VN",
+      "tokens": [
+        "VN",
+        "FOX",
+        "F0"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "blackhat",
+      "angle": 140,
+      "psm": 6,
+      "raw_text": "VN | O5I | 86",
+      "normalized_text": "VN",
+      "tokens": [
+        "VN",
+        "OSI",
+        "O51",
+        "OS1"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "blackhat",
+      "angle": 230,
+      "psm": 6,
+      "raw_text": "VN | 0 | X04",
+      "normalized_text": "VN",
+      "tokens": [
+        "VN",
+        "XOA",
+        "X04",
+        "XO4"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "blackhat",
+      "angle": 320,
+      "psm": 6,
+      "raw_text": "N | EE | G",
+      "normalized_text": "N",
+      "tokens": [
+        "N",
+        "EE",
+        "G"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "inv_otsu",
+      "angle": 50,
+      "psm": 6,
+      "raw_text": "FOX | 30",
+      "normalized_text": "FOX 30",
+      "tokens": [
+        "FOX",
+        "F0"
+      ],
+      "strengths": [
+        30
+      ]
+    },
+    {
+      "source_index": 0,
+      "variant": "inv_otsu",
+      "angle": 140,
+      "psm": 6,
+      "raw_text": "O",
+      "normalized_text": "O",
+      "tokens": [
+        "O"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "inv_otsu",
+      "angle": 230,
+      "psm": 6,
+      "raw_text": "0 | XO",
+      "normalized_text": "XO",
+      "tokens": [
+        "XO",
+        "X0"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "inv_otsu",
+      "angle": 320,
+      "psm": 6,
+      "raw_text": "I3",
+      "normalized_text": "I",
+      "tokens": [
+        "I",
+        "I3"
+      ],
+      "strengths": []
+    }
+  ],
+  "candidate_ranking": [
+    {
+      "code": "FOX",
+      "score": 0.99,
+      "exact_matches": 2,
+      "alias_matches": 0,
+      "strength_hits": 2,
+      "global_strength_matches": 1,
+      "structured_matches": 0,
+      "support_count": 5,
+      "source_count": 1,
+      "token_support": [
+        "F0",
+        "FOX",
+        "XO",
+        "XOA"
+      ],
+      "best_observation": {
+        "raw_text": "VN | FOX | 4",
+        "normalized_text": "VN",
+        "angle": 50,
+        "variant": "blackhat",
+        "source_index": 0,
+        "token": "FOX",
+        "reason": "exact",
+        "strengths": []
+      }
+    },
+    {
+      "code": "DO",
+      "score": 0.818,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 1,
+      "global_strength_matches": 1,
+      "structured_matches": 0,
+      "support_count": 3,
+      "source_count": 1,
+      "token_support": [
+        "F0",
+        "X0",
+        "XO"
+      ],
+      "best_observation": {
+        "raw_text": "FOX | 30",
+        "normalized_text": "FOX 30",
+        "angle": 50,
+        "variant": "inv_otsu",
+        "source_index": 0,
+        "token": "F0",
+        "reason": "partial, strength 30",
+        "strengths": [
+          30
+        ]
+      }
+    },
+    {
+      "code": "VA",
+      "score": 0.816,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 0,
+      "global_strength_matches": 1,
+      "structured_matches": 0,
+      "support_count": 3,
+      "source_count": 1,
+      "token_support": [
+        "VN"
+      ],
+      "best_observation": {
+        "raw_text": "VN | FOX | 4",
+        "normalized_text": "VN",
+        "angle": 50,
+        "variant": "blackhat",
+        "source_index": 0,
+        "token": "VN",
+        "reason": "partial",
+        "strengths": []
+      }
+    },
+    {
+      "code": "FEP",
+      "score": 0.804,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 1,
+      "global_strength_matches": 1,
+      "structured_matches": 0,
+      "support_count": 2,
+      "source_count": 1,
+      "token_support": [
+        "EE",
+        "FOX"
+      ],
+      "best_observation": {
+        "raw_text": "FOX | 30",
+        "normalized_text": "FOX 30",
+        "angle": 50,
+        "variant": "inv_otsu",
+        "source_index": 0,
+        "token": "FOX",
+        "reason": "partial, strength 30",
+        "strengths": [
+          30
+        ]
+      }
+    },
+    {
+      "code": "CN",
+      "score": 0.791,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 0,
+      "global_strength_matches": 0,
+      "structured_matches": 0,
+      "support_count": 3,
+      "source_count": 1,
+      "token_support": [
+        "VN"
+      ],
+      "best_observation": {
+        "raw_text": "VN | FOX | 4",
+        "normalized_text": "VN",
+        "angle": 50,
+        "variant": "blackhat",
+        "source_index": 0,
+        "token": "VN",
+        "reason": "partial",
+        "strengths": []
+      }
+    },
+    {
+      "code": "TE",
+      "score": 0.732,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 0,
+      "global_strength_matches": 1,
+      "structured_matches": 0,
+      "support_count": 2,
+      "source_count": 1,
+      "token_support": [
+        "EE",
+        "I3"
+      ],
+      "best_observation": {
+        "raw_text": "N | EE | G",
+        "normalized_text": "N",
+        "angle": 320,
+        "variant": "blackhat",
+        "source_index": 0,
+        "token": "EE",
+        "reason": "partial",
+        "strengths": []
+      }
+    },
+    {
+      "code": "CFX",
+      "score": 0.727,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 1,
+      "global_strength_matches": 1,
+      "structured_matches": 0,
+      "support_count": 1,
+      "source_count": 1,
+      "token_support": [
+        "FOX"
+      ],
+      "best_observation": {
+        "raw_text": "FOX | 30",
+        "normalized_text": "FOX 30",
+        "angle": 50,
+        "variant": "inv_otsu",
+        "source_index": 0,
+        "token": "FOX",
+        "reason": "partial, strength 30",
+        "strengths": [
+          30
+        ]
+      }
+    },
+    {
+      "code": "CTX",
+      "score": 0.727,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 1,
+      "global_strength_matches": 1,
+      "structured_matches": 0,
+      "support_count": 1,
+      "source_count": 1,
+      "token_support": [
+        "FOX"
+      ],
+      "best_observation": {
+        "raw_text": "FOX | 30",
+        "normalized_text": "FOX 30",
+        "angle": 50,
+        "variant": "inv_otsu",
+        "source_index": 0,
+        "token": "FOX",
+        "reason": "partial, strength 30",
+        "strengths": [
+          30
+        ]
+      }
+    },
+    {
+      "code": "FOS",
+      "score": 0.718,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 0,
+      "global_strength_matches": 0,
+      "structured_matches": 0,
+      "support_count": 1,
+      "source_count": 1,
+      "token_support": [
+        "FOX"
+      ],
+      "best_observation": {
+        "raw_text": "VN | FOX | 4",
+        "normalized_text": "VN",
+        "angle": 50,
+        "variant": "blackhat",
+        "source_index": 0,
+        "token": "FOX",
+        "reason": "partial",
+        "strengths": []
+      }
+    },
+    {
+      "code": "MOX",
+      "score": 0.718,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 0,
+      "global_strength_matches": 0,
+      "structured_matches": 0,
+      "support_count": 1,
+      "source_count": 1,
+      "token_support": [
+        "FOX"
+      ],
+      "best_observation": {
+        "raw_text": "VN | FOX | 4",
+        "normalized_text": "VN",
+        "angle": 50,
+        "variant": "blackhat",
+        "source_index": 0,
+        "token": "FOX",
+        "reason": "partial",
+        "strengths": []
+      }
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "analysis_id": "a1582fb4-5cf0-4ffd-b344-c5944766d5a6",
+  "status": "completed",
+  "created_at": "2026-04-18 20:25:20.889276+00:00",
+  "updated_at": "2026-04-18 20:25:20.899563+00:00",
+  "image_filename": "synthetic.png",
+  "message": "Analysis completed.",
+  "progress": 1.0,
+  "current_stage": "completed",
+  "error": null,
+  "result_available": true,
+  "timings": {
+    "image_decode_seconds": 0.015,
+    "image_resize_seconds": 0.0,
+    "analysis_scale": 1.0,
+    "plate_extraction_seconds": 0.159,
+    "quality_validation_seconds": 0.013,
+    "disc_detection_seconds": 0.403,
+    "calibration_seconds": 0.0,
+    "measurement_seconds": 0.861,
+    "ocr_seconds": 107.548,
+    "overlay_build_seconds": 0.001,
+    "panel_resolution_seconds": 0.0,
+    "result_serialization_seconds": 0.02,
+    "pipeline_seconds": 108.85,
+    "total_runtime_seconds": 109.051,
+    "storage_write_seconds": 0.009,
+    "total_runtime_with_persistence_seconds": 109.06
+  },
+  "status_url": "/api/analyze/a1582fb4-5cf0-4ffd-b344-c5944766d5a6/status",
+  "result_url": "/api/analyze/a1582fb4-5cf0-4ffd-b344-c5944766d5a6/result"
+}

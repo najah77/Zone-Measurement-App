@@ -1,0 +1,334 @@
+{
+  "observation_count": 5,
+  "observations": [
+    {
+      "source_index": 0,
+      "variant": "blackhat",
+      "angle": 63,
+      "psm": 6,
+      "raw_text": "Y | AY",
+      "normalized_text": "Y",
+      "tokens": [
+        "Y",
+        "AY"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "blackhat",
+      "angle": 153,
+      "psm": 6,
+      "raw_text": "Y | 2",
+      "normalized_text": "Y 2",
+      "tokens": [
+        "Y"
+      ],
+      "strengths": [
+        2
+      ]
+    },
+    {
+      "source_index": 0,
+      "variant": "inv_otsu",
+      "angle": 153,
+      "psm": 6,
+      "raw_text": "IS2 | O",
+      "normalized_text": "ISZ",
+      "tokens": [
+        "ISZ",
+        "I52",
+        "IS2",
+        "O"
+      ],
+      "strengths": []
+    },
+    {
+      "source_index": 0,
+      "variant": "inv_otsu",
+      "angle": 243,
+      "psm": 6,
+      "raw_text": "ATM | 30",
+      "normalized_text": "ATM 30",
+      "tokens": [
+        "ATM",
+        "A1"
+      ],
+      "strengths": [
+        30
+      ]
+    },
+    {
+      "source_index": 0,
+      "variant": "inv_otsu",
+      "angle": 333,
+      "psm": 6,
+      "raw_text": "F",
+      "normalized_text": "F",
+      "tokens": [
+        "F"
+      ],
+      "strengths": []
+    }
+  ],
+  "candidate_ranking": [
+    {
+      "code": "ATM",
+      "score": 0.99,
+      "exact_matches": 1,
+      "alias_matches": 0,
+      "strength_hits": 2,
+      "global_strength_matches": 1,
+      "structured_matches": 0,
+      "support_count": 3,
+      "source_count": 1,
+      "token_support": [
+        "A1",
+        "ATM",
+        "AY"
+      ],
+      "best_observation": {
+        "raw_text": "ATM | 30",
+        "normalized_text": "ATM 30",
+        "angle": 243,
+        "variant": "inv_otsu",
+        "source_index": 0,
+        "token": "ATM",
+        "reason": "exact, strength 30",
+        "strengths": [
+          30
+        ]
+      }
+    },
+    {
+      "code": "AK",
+      "score": 0.899,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 1,
+      "global_strength_matches": 1,
+      "structured_matches": 0,
+      "support_count": 2,
+      "source_count": 1,
+      "token_support": [
+        "A1",
+        "AY"
+      ],
+      "best_observation": {
+        "raw_text": "ATM | 30",
+        "normalized_text": "ATM 30",
+        "angle": 243,
+        "variant": "inv_otsu",
+        "source_index": 0,
+        "token": "A1",
+        "reason": "partial, strength 30",
+        "strengths": [
+          30
+        ]
+      }
+    },
+    {
+      "code": "P",
+      "score": 0.826,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 0,
+      "global_strength_matches": 0,
+      "structured_matches": 0,
+      "support_count": 2,
+      "source_count": 1,
+      "token_support": [
+        "F",
+        "Y"
+      ],
+      "best_observation": {
+        "raw_text": "F",
+        "normalized_text": "F",
+        "angle": 333,
+        "variant": "inv_otsu",
+        "source_index": 0,
+        "token": "F",
+        "reason": "partial",
+        "strengths": []
+      }
+    },
+    {
+      "code": "AMC",
+      "score": 0.804,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 1,
+      "global_strength_matches": 1,
+      "structured_matches": 0,
+      "support_count": 2,
+      "source_count": 1,
+      "token_support": [
+        "ATM",
+        "AY"
+      ],
+      "best_observation": {
+        "raw_text": "ATM | 30",
+        "normalized_text": "ATM 30",
+        "angle": 243,
+        "variant": "inv_otsu",
+        "source_index": 0,
+        "token": "ATM",
+        "reason": "partial, strength 30",
+        "strengths": [
+          30
+        ]
+      }
+    },
+    {
+      "code": "MIN",
+      "score": 0.741,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 1,
+      "global_strength_matches": 1,
+      "structured_matches": 0,
+      "support_count": 1,
+      "source_count": 1,
+      "token_support": [
+        "ATM"
+      ],
+      "best_observation": {
+        "raw_text": "ATM | 30",
+        "normalized_text": "ATM 30",
+        "angle": 243,
+        "variant": "inv_otsu",
+        "source_index": 0,
+        "token": "ATM",
+        "reason": "partial, strength 30",
+        "strengths": [
+          30
+        ]
+      }
+    },
+    {
+      "code": "TPZ",
+      "score": 0.728,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 0,
+      "global_strength_matches": 0,
+      "structured_matches": 0,
+      "support_count": 3,
+      "source_count": 1,
+      "token_support": [
+        "I52",
+        "IS2",
+        "ISZ"
+      ],
+      "best_observation": {
+        "raw_text": "IS2 | O",
+        "normalized_text": "ISZ",
+        "angle": 153,
+        "variant": "inv_otsu",
+        "source_index": 0,
+        "token": "ISZ",
+        "reason": "partial",
+        "strengths": []
+      }
+    },
+    {
+      "code": "CTX",
+      "score": 0.727,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 1,
+      "global_strength_matches": 1,
+      "structured_matches": 0,
+      "support_count": 1,
+      "source_count": 1,
+      "token_support": [
+        "ATM"
+      ],
+      "best_observation": {
+        "raw_text": "ATM | 30",
+        "normalized_text": "ATM 30",
+        "angle": 243,
+        "variant": "inv_otsu",
+        "source_index": 0,
+        "token": "ATM",
+        "reason": "partial, strength 30",
+        "strengths": [
+          30
+        ]
+      }
+    },
+    {
+      "code": "AM",
+      "score": 0.631,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 0,
+      "global_strength_matches": 0,
+      "structured_matches": 0,
+      "support_count": 1,
+      "source_count": 1,
+      "token_support": [
+        "AY"
+      ],
+      "best_observation": {
+        "raw_text": "Y | AY",
+        "normalized_text": "Y",
+        "angle": 63,
+        "variant": "blackhat",
+        "source_index": 0,
+        "token": "AY",
+        "reason": "partial",
+        "strengths": []
+      }
+    },
+    {
+      "code": "IPM",
+      "score": 0.617,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 0,
+      "global_strength_matches": 0,
+      "structured_matches": 0,
+      "support_count": 2,
+      "source_count": 1,
+      "token_support": [
+        "I52",
+        "ISZ"
+      ],
+      "best_observation": {
+        "raw_text": "IS2 | O",
+        "normalized_text": "ISZ",
+        "angle": 153,
+        "variant": "inv_otsu",
+        "source_index": 0,
+        "token": "ISZ",
+        "reason": "partial",
+        "strengths": []
+      }
+    },
+    {
+      "code": "CAZ",
+      "score": 0.547,
+      "exact_matches": 0,
+      "alias_matches": 0,
+      "strength_hits": 0,
+      "global_strength_matches": 1,
+      "structured_matches": 0,
+      "support_count": 1,
+      "source_count": 1,
+      "token_support": [
+        "ISZ"
+      ],
+      "best_observation": {
+        "raw_text": "IS2 | O",
+        "normalized_text": "ISZ",
+        "angle": 153,
+        "variant": "inv_otsu",
+        "source_index": 0,
+        "token": "ISZ",
+        "reason": "partial",
+        "strengths": []
+      }
+    }
+  ]
+}

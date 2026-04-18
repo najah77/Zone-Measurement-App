@@ -43,6 +43,9 @@ REAL_SAMPLE_PATH = ROOT / "data" / "analysis_runs" / "03315fd2-d572-4120-9813-57
 DRYAD_ROOT = ROOT.parent / "Test_Images" / "dryad_sirscan" / "images_original"
 DRYAD_1_1_1_PATH = DRYAD_ROOT / "1.1.1. original.jpg"
 DRYAD_1_10_1_PATH = DRYAD_ROOT / "1.10.1. original.jpg"
+CUSTOM_PLATES_ROOT = ROOT.parent / "Test_Images" / "custom_plates"
+PHONE_8_DISC_FAILING_PATH = CUSTOM_PLATES_ROOT / "WhatsApp Image 2026-02-09 at 6.13.31 AM.jpeg"
+PHONE_8_DISC_WORKING_PATH = CUSTOM_PLATES_ROOT / "WhatsApp Image 2026-02-09 at 5.48.44 AM.jpeg"
 
 
 def _resolve_real_sample_path(preferred_filenames: set[str], fallback: Path) -> Path:
@@ -134,6 +137,31 @@ def _load_dryad_disc_crop(image_path: Path, disc_index: int, *, expand_ratio: fl
         expand_ratio=expand_ratio,
         mask_scale=mask_scale,
     )
+
+
+def _predict_phone_fixture_labels(image_path: Path) -> list[dict]:
+    image = cv2.imread(str(image_path))
+    if image is None:
+        raise RuntimeError(f"Fixture {image_path} could not be decoded.")
+
+    plate_image, plate_detection = extract_plate(image)
+    discs = sorted(detect_discs(plate_image, plate_detection=plate_detection), key=lambda disc: (disc[1], disc[0]))
+    predictions: list[dict] = []
+    for index, (x, y, radius) in enumerate(discs, start=1):
+        crop = extract_disc_roi(plate_image, float(x), float(y), float(radius), expand_ratio=0.24, mask_scale=0.82)
+        relaxed_crop = extract_disc_roi(plate_image, float(x), float(y), float(radius), expand_ratio=0.30, mask_scale=0.98)
+        prediction = predict_disc_class_ocr(crop, fallback_images=[relaxed_crop], include_debug=True)
+        predictions.append(
+            {
+                "index": index,
+                "disc": (round(float(x), 1), round(float(y), 1), round(float(radius), 1)),
+                "code": prediction["code"],
+                "confidence_tier": prediction["confidence_tier"],
+                "candidates": prediction["candidates"],
+                "raw_ocr_text": prediction["raw_ocr_text"],
+            }
+        )
+    return predictions
 
 
 class GeometryAndNormalizationTests(unittest.TestCase):
@@ -557,6 +585,42 @@ class RegressionFixtureTests(unittest.TestCase):
         first_rows = [(item.final_code, round(item.final_diameter_mm, 2)) for item in sorted(first.results, key=lambda item: (item.center.x + item.center.y))]
         second_rows = [(item.final_code, round(item.final_diameter_mm, 2)) for item in sorted(second.results, key=lambda item: (item.center.x + item.center.y))]
         self.assertEqual(first_rows, second_rows)
+
+    @unittest.skipUnless(PHONE_8_DISC_FAILING_PATH.exists(), "Flagged 8-disc phone fixture is not available in this workspace.")
+    def test_flagged_phone_fixture_recovers_all_visible_discs(self) -> None:
+        image = cv2.imread(str(PHONE_8_DISC_FAILING_PATH))
+        self.assertIsNotNone(image)
+        plate_image, plate_detection = extract_plate(image)
+        discs = detect_discs(plate_image, plate_detection=plate_detection)
+        self.assertEqual(len(discs), 8)
+
+    @unittest.skipUnless(PHONE_8_DISC_WORKING_PATH.exists(), "Working 8-disc phone fixture is not available in this workspace.")
+    def test_working_phone_fixture_keeps_eight_disc_detection(self) -> None:
+        image = cv2.imread(str(PHONE_8_DISC_WORKING_PATH))
+        self.assertIsNotNone(image)
+        plate_image, plate_detection = extract_plate(image)
+        discs = detect_discs(plate_image, plate_detection=plate_detection)
+        self.assertEqual(len(discs), 8)
+
+    @unittest.skipUnless(PHONE_8_DISC_FAILING_PATH.exists(), "Flagged 8-disc phone fixture is not available in this workspace.")
+    def test_flagged_phone_fixture_ocr_reads_readable_labels_and_rejects_garbage(self) -> None:
+        predictions = _predict_phone_fixture_labels(PHONE_8_DISC_FAILING_PATH)
+        self.assertEqual(len(predictions), 8)
+        self.assertEqual(predictions[0]["code"], "IPM")
+        self.assertEqual(predictions[2]["code"], "CN")
+        self.assertEqual(predictions[5]["code"], "AK")
+        self.assertEqual(predictions[6]["code"], "FEP")
+        self.assertEqual(predictions[7]["code"], "FOX")
+        self.assertEqual(predictions[1]["code"], "UNKNOWN")
+        self.assertEqual(predictions[1]["confidence_tier"], "uncertain_manual_confirmation_required")
+        self.assertEqual(predictions[4]["code"], "UNKNOWN")
+        self.assertEqual(predictions[4]["confidence_tier"], "uncertain_manual_confirmation_required")
+        self.assertNotIn("AM", [item["code"] for item in predictions])
+
+    @unittest.skipUnless(PHONE_8_DISC_WORKING_PATH.exists(), "Working 8-disc phone fixture is not available in this workspace.")
+    def test_working_phone_fixture_ocr_keeps_visible_labels(self) -> None:
+        predictions = _predict_phone_fixture_labels(PHONE_8_DISC_WORKING_PATH)
+        self.assertEqual([item["code"] for item in predictions[:7]], ["FOX", "ATM", "SAM", "TE", "CAZ", "CN", "TZP"])
 
 
 if __name__ == "__main__":

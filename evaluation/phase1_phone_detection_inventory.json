@@ -1,0 +1,443 @@
+[
+  {
+    "file": "WhatsApp Image 2026-02-09 at 5.48.44 AM.jpeg",
+    "count": 8,
+    "fallback": false,
+    "suspicious_low_count": false,
+    "accepted": 8,
+    "raw": 8,
+    "rejected": 0
+  },
+  {
+    "file": "WhatsApp Image 2026-02-09 at 5.48.45 AM.jpeg",
+    "count": 7,
+    "fallback": false,
+    "suspicious_low_count": false,
+    "accepted": 7,
+    "raw": 7,
+    "rejected": 0
+  },
+  {
+    "file": "WhatsApp Image 2026-02-09 at 5.50.36 AM (1).jpeg",
+    "count": 7,
+    "fallback": false,
+    "suspicious_low_count": false,
+    "accepted": 7,
+    "raw": 7,
+    "rejected": 0
+  },
+  {
+    "file": "WhatsApp Image 2026-02-09 at 5.50.36 AM.jpeg",
+    "count": 4,
+    "fallback": true,
+    "suspicious_low_count": true,
+    "accepted": 4,
+    "raw": 11,
+    "rejected": 7
+  },
+  {
+    "file": "WhatsApp Image 2026-02-09 at 6.00.07 AM.jpeg",
+    "count": 7,
+    "fallback": false,
+    "suspicious_low_count": false,
+    "accepted": 7,
+    "raw": 8,
+    "rejected": 1
+  },
+  {
+    "file": "WhatsApp Image 2026-02-09 at 6.00.09 AM.jpeg",
+    "count": 7,
+    "fallback": false,
+    "suspicious_low_count": false,
+    "accepted": 7,
+    "raw": 7,
+    "rejected": 0
+  },
+  {
+    "file": "WhatsApp Image 2026-02-09 at 6.13.22 AM.jpeg",
+    "count": 7,
+    "fallback": false,
+    "suspicious_low_count": false,
+    "accepted": 7,
+    "raw": 7,
+    "rejected": 0
+  },
+  {
+    "file": "WhatsApp Image 2026-02-09 at 6.13.23 AM.jpeg",
+    "count": 9,
+    "fallback": true,
+    "suspicious_low_count": true,
+    "accepted": 9,
+    "raw": 46,
+    "rejected": 37
+  },
+  {
+    "file": "WhatsApp Image 2026-02-09 at 6.13.24 AM.jpeg",
+    "count": 8,
+    "fallback": true,
+    "suspicious_low_count": true,
+    "accepted": 8,
+    "raw": 24,
+    "rejected": 16
+  },
+  {
+    "file": "WhatsApp Image 2026-02-09 at 6.13.26 AM.jpeg",
+    "count": 6,
+    "fallback": false,
+    "suspicious_low_count": false,
+    "accepted": 6,
+    "raw": 6,
+    "rejected": 0
+  },
+  {
+    "file": "WhatsApp Image 2026-02-09 at 6.13.27 AM (1).jpeg",
+    "count": 4,
+    "fallback": true,
+    "suspicious_low_count": true,
+    "accepted": 4,
+    "raw": 11,
+    "rejected": 7
+  },
+  {
+    "file": "WhatsApp Image 2026-02-09 at 6.13.27 AM (2).jpeg",
+    "count": 6,
+    "fallback": false,
+    "suspicious_low_count": false,
+    "accepted": 6,
+    "raw": 6,
+    "rejected": 0
+  },
+  {
+    "file": "WhatsApp Image 2026-02-09 at 6.13.27 AM.jpeg",
+    "count": 6,
+    "fallback": true,
+    "suspicious_low_count": true,
+    "accepted": 6,
+    "raw": 17,
+    "rejected": 11
+  },
+  {
+    "file": "WhatsApp Image 2026-02-09 at 6.13.28 AM (1).jpeg",
+    "count": 8,
+    "fallback": true,
+    "suspicious_low_count": true,
+    "accepted": 8,
+    "raw": 21,
+    "rejected": 13
+  },
+  {
+    "file": "WhatsApp Image 2026-02-09 at 6.13.28 AM (2).jpeg",
+    "count": 6,
+    "fallback": false,
+    "suspicious_low_count": false,
+    "accepted": 6,
+    "raw": 7,
+    "rejected": 1
+  },
+  {
+    "file": "WhatsApp Image 2026-02-09 at 6.13.28 AM.jpeg",
+    "count": 4,
+    "fallback": true,
+    "suspicious_low_count": true,
+    "accepted": 4,
+    "raw": 14,
+    "rejected": 10
+  },
+  {
+    "file": "WhatsApp Image 2026-02-09 at 6.13.29 AM (1).jpeg",
+    "count": 6,
+    "fallback": false,
+    "suspicious_low_count": false,
+    "accepted": 6,
+    "raw": 6,
+    "rejected": 0
+  },
+  {
+    "file": "WhatsApp Image 2026-02-09 at 6.13.29 AM (2).jpeg",
+    "count": 5,
+    "fallback": false,
+    "suspicious_low_count": false,
+    "accepted": 5,
+    "raw": 7,
+    "rejected": 2
+  },
+  {
+    "file": "WhatsApp Image 2026-02-09 at 6.13.29 AM.jpeg",
+    "count": 7,
+    "fallback": false,
+    "suspicious_low_count": false,
+    "accepted": 7,
+    "raw": 7,
+    "rejected": 0
+  },
+  {
+    "file": "WhatsApp Image 2026-02-09 at 6.13.30 AM (1).jpeg",
+    "count": 6,
+    "fallback": false,
+    "suspicious_low_count": false,
+    "accepted": 6,
+    "raw": 6,
+    "rejected": 0
+  },
+  {
+    "file": "WhatsApp Image 2026-02-09 at 6.13.30 AM (2).jpeg",
+    "count": 5,
+    "fallback": false,
+    "suspicious_low_count": false,
+    "accepted": 5,
+    "raw": 6,
+    "rejected": 1
+  },
+  {
+    "file": "WhatsApp Image 2026-02-09 at 6.13.30 AM.jpeg",
+    "count": 4,
+    "fallback": true,
+    "suspicious_low_count": true,
+    "accepted": 4,
+    "raw": 12,
+    "rejected": 8
+  },
+  {
+    "file": "WhatsApp Image 2026-02-09 at 6.13.31 AM (1).jpeg",
+    "count": 4,
+    "fallback": true,
+    "suspicious_low_count": true,
+    "accepted": 4,
+    "raw": 18,
+    "rejected": 14
+  },
+  {
+    "file": "WhatsApp Image 2026-02-09 at 6.13.31 AM (2).jpeg",
+    "count": 5,
+    "fallback": false,
+    "suspicious_low_count": false,
+    "accepted": 5,
+    "raw": 6,
+    "rejected": 1
+  },
+  {
+    "file": "WhatsApp Image 2026-02-09 at 6.13.31 AM.jpeg",
+    "count": 8,
+    "fallback": true,
+    "suspicious_low_count": true,
+    "accepted": 8,
+    "raw": 21,
+    "rejected": 13
+  },
+  {
+    "file": "WhatsApp Image 2026-02-09 at 6.13.32 AM (1).jpeg",
+    "count": 8,
+    "fallback": true,
+    "suspicious_low_count": true,
+    "accepted": 8,
+    "raw": 18,
+    "rejected": 10
+  },
+  {
+    "file": "WhatsApp Image 2026-02-09 at 6.13.32 AM (2).jpeg",
+    "count": 6,
+    "fallback": true,
+    "suspicious_low_count": true,
+    "accepted": 6,
+    "raw": 21,
+    "rejected": 15
+  },
+  {
+    "file": "WhatsApp Image 2026-02-09 at 6.13.32 AM.jpeg",
+    "count": 5,
+    "fallback": true,
+    "suspicious_low_count": true,
+    "accepted": 5,
+    "raw": 14,
+    "rejected": 9
+  },
+  {
+    "file": "WhatsApp Image 2026-02-09 at 6.13.33 AM.jpeg",
+    "count": 5,
+    "fallback": true,
+    "suspicious_low_count": true,
+    "accepted": 5,
+    "raw": 20,
+    "rejected": 15
+  },
+  {
+    "file": "WhatsApp Image 2026-02-09 at 6.14.03 AM (1).jpeg",
+    "count": 4,
+    "fallback": true,
+    "suspicious_low_count": true,
+    "accepted": 4,
+    "raw": 17,
+    "rejected": 13
+  },
+  {
+    "file": "WhatsApp Image 2026-02-09 at 6.14.03 AM.jpeg",
+    "count": 8,
+    "fallback": true,
+    "suspicious_low_count": true,
+    "accepted": 8,
+    "raw": 20,
+    "rejected": 12
+  },
+  {
+    "file": "WhatsApp Image 2026-02-09 at 6.14.04 AM (1).jpeg",
+    "count": 6,
+    "fallback": false,
+    "suspicious_low_count": false,
+    "accepted": 6,
+    "raw": 6,
+    "rejected": 0
+  },
+  {
+    "file": "WhatsApp Image 2026-02-09 at 6.14.04 AM (2).jpeg",
+    "count": 6,
+    "fallback": true,
+    "suspicious_low_count": true,
+    "accepted": 6,
+    "raw": 15,
+    "rejected": 9
+  },
+  {
+    "file": "WhatsApp Image 2026-02-09 at 6.14.04 AM.jpeg",
+    "count": 6,
+    "fallback": true,
+    "suspicious_low_count": true,
+    "accepted": 6,
+    "raw": 16,
+    "rejected": 10
+  },
+  {
+    "file": "WhatsApp Image 2026-02-09 at 6.14.09 AM.jpeg",
+    "count": 4,
+    "fallback": true,
+    "suspicious_low_count": true,
+    "accepted": 4,
+    "raw": 12,
+    "rejected": 8
+  },
+  {
+    "file": "WhatsApp Image 2026-02-09 at 6.19.31 AM.jpeg",
+    "count": 6,
+    "fallback": true,
+    "suspicious_low_count": true,
+    "accepted": 6,
+    "raw": 34,
+    "rejected": 28
+  },
+  {
+    "file": "WhatsApp Image 2026-02-09 at 6.19.32 AM (1).jpeg",
+    "count": 6,
+    "fallback": false,
+    "suspicious_low_count": false,
+    "accepted": 6,
+    "raw": 6,
+    "rejected": 0
+  },
+  {
+    "file": "WhatsApp Image 2026-02-09 at 6.19.32 AM (2).jpeg",
+    "count": 6,
+    "fallback": true,
+    "suspicious_low_count": true,
+    "accepted": 6,
+    "raw": 15,
+    "rejected": 9
+  },
+  {
+    "file": "WhatsApp Image 2026-02-09 at 6.19.32 AM.jpeg",
+    "count": 4,
+    "fallback": true,
+    "suspicious_low_count": true,
+    "accepted": 4,
+    "raw": 14,
+    "rejected": 10
+  },
+  {
+    "file": "WhatsApp Image 2026-02-09 at 6.19.33 AM (1).jpeg",
+    "count": 6,
+    "fallback": false,
+    "suspicious_low_count": false,
+    "accepted": 6,
+    "raw": 6,
+    "rejected": 0
+  },
+  {
+    "file": "WhatsApp Image 2026-02-09 at 6.19.33 AM.jpeg",
+    "count": 6,
+    "fallback": false,
+    "suspicious_low_count": false,
+    "accepted": 6,
+    "raw": 6,
+    "rejected": 0
+  },
+  {
+    "file": "WhatsApp Image 2026-02-09 at 6.19.35 AM (1).jpeg",
+    "count": 5,
+    "fallback": false,
+    "suspicious_low_count": false,
+    "accepted": 5,
+    "raw": 6,
+    "rejected": 1
+  },
+  {
+    "file": "WhatsApp Image 2026-02-09 at 6.19.35 AM.jpeg",
+    "count": 6,
+    "fallback": false,
+    "suspicious_low_count": false,
+    "accepted": 6,
+    "raw": 6,
+    "rejected": 0
+  },
+  {
+    "file": "WhatsApp Image 2026-02-09 at 6.19.36 AM (1).jpeg",
+    "count": 6,
+    "fallback": true,
+    "suspicious_low_count": true,
+    "accepted": 6,
+    "raw": 16,
+    "rejected": 10
+  },
+  {
+    "file": "WhatsApp Image 2026-02-09 at 6.19.36 AM (2).jpeg",
+    "count": 6,
+    "fallback": true,
+    "suspicious_low_count": true,
+    "accepted": 6,
+    "raw": 22,
+    "rejected": 16
+  },
+  {
+    "file": "WhatsApp Image 2026-02-09 at 6.19.36 AM.jpeg",
+    "count": 5,
+    "fallback": true,
+    "suspicious_low_count": true,
+    "accepted": 5,
+    "raw": 13,
+    "rejected": 8
+  },
+  {
+    "file": "WhatsApp Image 2026-02-09 at 6.19.45 AM.jpeg",
+    "count": 5,
+    "fallback": true,
+    "suspicious_low_count": true,
+    "accepted": 5,
+    "raw": 21,
+    "rejected": 16
+  },
+  {
+    "file": "WhatsApp Image 2026-02-09 at 6.19.46 AM (1).jpeg",
+    "count": 6,
+    "fallback": true,
+    "suspicious_low_count": true,
+    "accepted": 6,
+    "raw": 26,
+    "rejected": 20
+  },
+  {
+    "file": "WhatsApp Image 2026-02-09 at 6.19.46 AM.jpeg",
+    "count": 6,
+    "fallback": false,
+    "suspicious_low_count": false,
+    "accepted": 6,
+    "raw": 6,
+    "rejected": 0
+  }
+]

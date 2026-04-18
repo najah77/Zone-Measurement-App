@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 from itertools import zip_longest
-from typing import Dict, Iterable, List, Sequence, Tuple
+from typing import Any, Dict, Iterable, List, Sequence, Tuple
 
 import cv2
 import numpy as np
@@ -77,13 +77,14 @@ ANTIBIOTIC_CODEBOOK: Dict[str, Dict[str, object]] = {
     "F100": {"strengths": {100}},
 }
 
-DIRECT_ALIAS_MAP = {
+STRONG_ALIAS_MAP = {
     "GN": "CN",
-    "IE": "TE",
-    "SAN": "SAM",
-    "AN": "AM",
     "CIF": "CIP",
     "TOP": "TOB",
+}
+SOFT_ALIAS_MAP = {
+    "IE": "TE",
+    "SAN": "SAM",
 }
 
 VALID_STRENGTHS = {2, 5, 10, 15, 20, 25, 30, 50, 100, 110, 200, 300}
@@ -262,6 +263,21 @@ def _build_polar_variants(roi_image: np.ndarray) -> Dict[str, np.ndarray]:
     return strip_variants
 
 
+def build_ocr_debug_artifacts(roi_image: np.ndarray) -> Dict[str, np.ndarray]:
+    if roi_image is None or roi_image.size == 0:
+        return {}
+    tightened = _tighten_disc_crop(roi_image)
+    variants = _build_variants(roi_image)
+    polar_variants = _build_polar_variants(roi_image)
+    artifacts: Dict[str, np.ndarray] = {
+        "tightened_crop": tightened,
+        "gray": tightened,
+    }
+    artifacts.update(variants)
+    artifacts.update(polar_variants)
+    return artifacts
+
+
 def _estimate_candidate_angles(blackhat: np.ndarray) -> List[int]:
     percentile = int(np.percentile(blackhat, 97))
     mask = cv2.inRange(blackhat, percentile, 255)
@@ -356,11 +372,14 @@ def _is_ordered_subsequence(token: str, candidate: str) -> bool:
 
 
 def _alignment_score(token: str, candidate: str) -> Tuple[float, str]:
-    alias_target = DIRECT_ALIAS_MAP.get(token)
+    alias_target = STRONG_ALIAS_MAP.get(token)
+    soft_alias_target = SOFT_ALIAS_MAP.get(token)
     if token == candidate:
         return 1.0, "exact"
     if alias_target == candidate:
         return 0.95, "alias"
+    if soft_alias_target == candidate:
+        return 0.82, "soft_alias"
     if len(token) == 1 and len(candidate) > 1:
         return 0.0, "too_short"
     if len(token) == 2 and len(candidate) == 3:
@@ -516,13 +535,27 @@ def _ocr_observations(roi_image: np.ndarray) -> List[Dict[str, object]]:
 
 
 def _score_candidates(observations: Sequence[Dict[str, object]]) -> List[Dict[str, object]]:
+    observed_strength_counter: Dict[int, int] = {}
+    for observation in observations:
+        for strength in observation.get("strengths", []):
+            try:
+                normalized_strength = int(strength)
+            except (TypeError, ValueError):
+                continue
+            observed_strength_counter[normalized_strength] = observed_strength_counter.get(normalized_strength, 0) + 1
+
     aggregate: Dict[str, Dict[str, object]] = {
         code: {
             "code": code,
             "scores": [],
             "exact_matches": 0,
+            "alias_matches": 0,
             "strength_hits": 0,
+            "global_strength_matches": 0,
+            "structured_matches": 0,
             "angles": set(),
+            "sources": set(),
+            "tokens": set(),
             "best_observation": None,
             "best_score": 0.0,
             "reasons": [],
@@ -564,11 +597,17 @@ def _score_candidates(observations: Sequence[Dict[str, object]]) -> List[Dict[st
             entry = aggregate[candidate]
             entry["scores"].append(total)
             entry["angles"].add(int(observation["angle"]))
+            entry["sources"].add(int(observation.get("source_index", 0)))
+            entry["tokens"].add(token)
             entry["reasons"].append(reason)
             if strength_delta > 0:
                 entry["strength_hits"] += 1
-            if token == candidate or DIRECT_ALIAS_MAP.get(token) == candidate:
+            if token == candidate:
                 entry["exact_matches"] += 1
+            elif STRONG_ALIAS_MAP.get(token) == candidate:
+                entry["alias_matches"] += 1
+            if reason.startswith(("prefix", "suffix", "outer-pair", "skip-middle")):
+                entry["structured_matches"] += 1
             if total > float(entry["best_score"]):
                 entry["best_score"] = total
                 entry["best_observation"] = {
@@ -576,6 +615,7 @@ def _score_candidates(observations: Sequence[Dict[str, object]]) -> List[Dict[st
                     "normalized_text": observation["normalized_text"],
                     "angle": observation["angle"],
                     "variant": observation["variant"],
+                    "source_index": observation.get("source_index", 0),
                     "token": token,
                     "reason": reason,
                     "strengths": strengths,
@@ -591,22 +631,44 @@ def _score_candidates(observations: Sequence[Dict[str, object]]) -> List[Dict[st
         mean_top = sum(top_slice) / float(len(top_slice))
         support_bonus = min(0.10, 0.035 * max(0, len(scores) - 1))
         angle_bonus = min(0.04, 0.015 * max(0, len(entry["angles"]) - 1))
-        combined_score = min(0.99, (best_score * 0.72) + (mean_top * 0.28) + support_bonus + angle_bonus)
+        source_bonus = min(0.04, 0.02 * max(0, len(entry["sources"]) - 1))
+        combined_score = min(0.99, (best_score * 0.72) + (mean_top * 0.28) + support_bonus + angle_bonus + source_bonus)
+        expected_strengths = set(ANTIBIOTIC_CODEBOOK.get(str(entry["code"]), {}).get("strengths", set()))
+        global_strength_matches = sum(observed_strength_counter.get(value, 0) for value in expected_strengths)
+        entry["global_strength_matches"] = global_strength_matches
+        if global_strength_matches > 0 and len(scores) > 0:
+            combined_score = min(
+                0.99,
+                combined_score + min(0.09, 0.025 * global_strength_matches + (0.02 if int(entry["structured_matches"]) > 0 else 0.0)),
+            )
+        if int(entry["structured_matches"]) > 1 and len(str(entry["code"])) >= 3:
+            combined_score = min(0.99, combined_score + min(0.06, 0.02 * int(entry["structured_matches"])))
         if int(entry["exact_matches"]) == 0:
             combined_score = min(combined_score, 0.94)
+        if int(entry["exact_matches"]) == 0 and int(entry["alias_matches"]) > 0:
+            combined_score = min(combined_score, 0.88)
         if len(scores) == 1 and int(entry["exact_matches"]) == 0:
             combined_score = max(0.0, combined_score - 0.06)
         if len(str(entry["code"])) == 1 and int(entry["exact_matches"]) < 2:
             combined_score = min(combined_score, 0.84)
+        if len(str(entry["code"])) <= 2 and int(entry["exact_matches"]) == 0 and int(entry["strength_hits"]) == 0:
+            combined_score = min(combined_score, 0.86)
+        if str(entry["code"]) == "AM" and int(entry["exact_matches"]) == 0 and global_strength_matches == 0:
+            combined_score = min(combined_score, 0.74)
         ranked.append(
             {
                 "code": entry["code"],
                 "score": round(combined_score, 3),
                 "exact_matches": int(entry["exact_matches"]),
+                "alias_matches": int(entry["alias_matches"]),
                 "strength_hits": int(entry["strength_hits"]),
+                "global_strength_matches": int(global_strength_matches),
+                "structured_matches": int(entry["structured_matches"]),
                 "support_count": len(scores),
+                "source_count": len(entry["sources"]),
                 "best_strength_count": len(list((entry["best_observation"] or {}).get("strengths", []))),
                 "best_observation": entry["best_observation"],
+                "token_support": sorted(str(value) for value in entry["tokens"])[:6],
             }
         )
 
@@ -614,6 +676,8 @@ def _score_candidates(observations: Sequence[Dict[str, object]]) -> List[Dict[st
         key=lambda item: (
             -float(item["score"]),
             -int(item["strength_hits"]),
+            -int(item.get("global_strength_matches", 0)),
+            -int(item.get("structured_matches", 0)),
             -int(item.get("best_strength_count", 0)),
             -int(item["exact_matches"]),
             -int(item["support_count"]),
@@ -657,12 +721,52 @@ def _score_candidates(observations: Sequence[Dict[str, object]]) -> List[Dict[st
     return ranked
 
 
+def _build_ocr_debug_payload(
+    observations: Sequence[Dict[str, object]],
+    ranked: Sequence[Dict[str, object]],
+) -> Dict[str, Any]:
+    return {
+        "observation_count": len(observations),
+        "observations": [
+            {
+                "source_index": int(observation.get("source_index", 0)),
+                "variant": str(observation.get("variant", "")),
+                "angle": int(observation.get("angle", 0)),
+                "psm": int(observation.get("psm", 0)),
+                "raw_text": str(observation.get("raw_text", "")),
+                "normalized_text": str(observation.get("normalized_text", "")),
+                "tokens": list(observation.get("tokens", []))[:6],
+                "strengths": [int(value) for value in observation.get("strengths", [])[:4]],
+            }
+            for observation in observations[:40]
+        ],
+        "candidate_ranking": [
+            {
+                "code": str(item.get("code", "")),
+                "score": float(item.get("score", 0.0)),
+                "exact_matches": int(item.get("exact_matches", 0)),
+                "alias_matches": int(item.get("alias_matches", 0)),
+                "strength_hits": int(item.get("strength_hits", 0)),
+                "global_strength_matches": int(item.get("global_strength_matches", 0)),
+                "structured_matches": int(item.get("structured_matches", 0)),
+                "support_count": int(item.get("support_count", 0)),
+                "source_count": int(item.get("source_count", 0)),
+                "token_support": list(item.get("token_support", []))[:6],
+                "best_observation": dict(item.get("best_observation") or {}),
+            }
+            for item in ranked[:10]
+        ],
+    }
+
+
 def predict_disc_class_ocr(
     roi_image: np.ndarray,
     fallback_images: Sequence[np.ndarray] | None = None,
+    *,
+    include_debug: bool = False,
 ) -> Dict[str, object]:
     if roi_image is None or roi_image.size == 0:
-        return {
+        response = {
             "code": "UNKNOWN",
             "confidence": 0.0,
             "confidence_tier": "failed_unknown",
@@ -674,20 +778,28 @@ def predict_disc_class_ocr(
             "decision_source": "ocr_failed",
             "engine": "hybrid-ocr-whitelist",
         }
+        if include_debug:
+            response["ocr_debug"] = _build_ocr_debug_payload([], [])
+        return response
 
-    observations = _ocr_observations(roi_image)
+    observations: List[Dict[str, object]] = []
+    for observation in _ocr_observations(roi_image):
+        observation["source_index"] = 0
+        observations.append(observation)
     ranked = _score_candidates(observations)
     if fallback_images and not _is_rank_confident_enough(ranked):
-        for fallback_image in fallback_images:
+        for source_index, fallback_image in enumerate(fallback_images, start=1):
             if fallback_image is None or fallback_image.size == 0:
                 continue
-            observations.extend(_ocr_observations(fallback_image))
+            for observation in _ocr_observations(fallback_image):
+                observation["source_index"] = source_index
+                observations.append(observation)
             ranked = _score_candidates(observations)
             if _is_rank_confident_enough(ranked):
                 break
 
     if not observations:
-        return {
+        response = {
             "code": "UNKNOWN",
             "confidence": 0.0,
             "confidence_tier": "failed_unknown",
@@ -699,6 +811,9 @@ def predict_disc_class_ocr(
             "decision_source": "ocr_failed",
             "engine": "hybrid-ocr-whitelist",
         }
+        if include_debug:
+            response["ocr_debug"] = _build_ocr_debug_payload(observations, ranked)
+        return response
 
     unique_raw = []
     for observation in observations:
@@ -709,7 +824,7 @@ def predict_disc_class_ocr(
             break
 
     if not ranked:
-        return {
+        response = {
             "code": "UNKNOWN",
             "confidence": 0.0,
             "confidence_tier": "failed_unknown",
@@ -721,6 +836,9 @@ def predict_disc_class_ocr(
             "decision_source": "ocr_failed",
             "engine": "hybrid-ocr-whitelist",
         }
+        if include_debug:
+            response["ocr_debug"] = _build_ocr_debug_payload(observations, ranked)
+        return response
 
     top = ranked[0]
     ranked_lookup = {str(item["code"]): item for item in ranked}
@@ -736,8 +854,12 @@ def predict_disc_class_ocr(
     top_code = str(top["code"])
     top_score = float(top["score"])
     top_exact = int(top["exact_matches"]) > 0
+    top_alias = int(top.get("alias_matches", 0)) > 0
     top_support_count = int(top["support_count"])
+    top_source_count = int(top.get("source_count", 0))
     top_strength_hits = int(top["strength_hits"])
+    top_global_strength_matches = int(top.get("global_strength_matches", 0))
+    top_structured_matches = int(top.get("structured_matches", 0))
     best_token = str(best_observation.get("token", ""))
     candidates = [str(item["code"]) for item in ranked[:6]]
     single_letter_without_strength = len(top_code) == 1 and not strengths
@@ -755,7 +877,7 @@ def predict_disc_class_ocr(
                 "Blurred OCR could not safely separate 'FOS' from the nearby whitelist code 'FOX'; manual confirmation is required."
             )
             decision_source = "ocr_suggestion_only"
-            return {
+            response = {
                 "code": "UNKNOWN",
                 "confidence": round(top_score, 3),
                 "confidence_tier": confidence_tier,
@@ -768,6 +890,9 @@ def predict_disc_class_ocr(
                 "engine": "hybrid-ocr-whitelist",
                 "observed_strengths": strengths,
             }
+            if include_debug:
+                response["ocr_debug"] = _build_ocr_debug_payload(observations, ranked)
+            return response
 
     if top_code == "P" and "CIP" in ranked_lookup:
         cip_score = float(ranked_lookup["CIP"]["score"])
@@ -786,6 +911,35 @@ def predict_disc_class_ocr(
             best_observation = cip_observation
             strengths = cip_strengths
             candidates = [str(item["code"]) for item in ranked[:6]]
+            top_alias = int(ranked_lookup["CIP"].get("alias_matches", 0)) > 0
+            top_global_strength_matches = int(ranked_lookup["CIP"].get("global_strength_matches", 0))
+            top_structured_matches = int(ranked_lookup["CIP"].get("structured_matches", 0))
+            top_support_count = int(ranked_lookup["CIP"].get("support_count", top_support_count))
+            top_source_count = int(ranked_lookup["CIP"].get("source_count", top_source_count))
+
+    if top_code == "CIP" and "IPM" in ranked_lookup:
+        ipm_entry = ranked_lookup["IPM"]
+        ipm_score = float(ipm_entry["score"])
+        if (
+            abs(top_score - ipm_score) <= 0.03
+            and int(ipm_entry.get("structured_matches", 0)) > top_structured_matches
+            and int(ipm_entry.get("global_strength_matches", 0)) >= 1
+        ):
+            top_code = "IPM"
+            top_score = ipm_score
+            top_exact = int(ipm_entry["exact_matches"]) > 0
+            top_alias = int(ipm_entry.get("alias_matches", 0)) > 0
+            top_support_count = int(ipm_entry.get("support_count", top_support_count))
+            top_source_count = int(ipm_entry.get("source_count", top_source_count))
+            top_strength_hits = int(ipm_entry.get("strength_hits", top_strength_hits))
+            top_global_strength_matches = int(ipm_entry.get("global_strength_matches", top_global_strength_matches))
+            top_structured_matches = int(ipm_entry.get("structured_matches", top_structured_matches))
+            best_observation = dict(ipm_entry.get("best_observation") or {})
+            strengths = list(best_observation.get("strengths", []))
+            strength_fragment = ""
+            if strengths:
+                strength_fragment = f" using strength {'/'.join(str(value) for value in strengths)}"
+            candidates = [str(item["code"]) for item in ranked[:6]]
 
     if len(top_code) == 1 and not strengths and top_support_count < 2:
         confidence_tier = "uncertain_manual_confirmation_required"
@@ -793,7 +947,7 @@ def predict_disc_class_ocr(
             f"OCR only produced the short single-letter token '{top_code}' once; manual confirmation is required."
         )
         decision_source = "ocr_suggestion_only"
-        return {
+        response = {
             "code": "UNKNOWN",
             "confidence": round(top_score, 3),
             "confidence_tier": confidence_tier,
@@ -806,6 +960,46 @@ def predict_disc_class_ocr(
             "engine": "hybrid-ocr-whitelist",
             "observed_strengths": strengths,
         }
+        if include_debug:
+            response["ocr_debug"] = _build_ocr_debug_payload(observations, ranked)
+        return response
+
+    if (
+        top_exact
+        and not strengths
+        and top_support_count <= 3
+        and top_source_count <= 1
+        and len(ranked) > 1
+        and (
+            (
+                float(ranked[1]["score"]) >= (top_score - 0.03)
+                and int(ranked[1].get("exact_matches", 0)) > 0
+            )
+            or float(ranked[1]["score"]) >= (top_score - 0.06)
+        )
+    ):
+        confidence_tier = "uncertain_manual_confirmation_required"
+        selection_reason = (
+            f"OCR produced '{top_code}' from a narrow single-source exact read,"
+            " but nearby alternatives remained too close to trust it automatically."
+        )
+        decision_source = "ocr_suggestion_only"
+        response = {
+            "code": "UNKNOWN",
+            "confidence": round(top_score, 3),
+            "confidence_tier": confidence_tier,
+            "candidates": candidates,
+            "whitelist_candidates": candidates,
+            "raw_ocr_text": str(best_observation.get("raw_text", " | ".join(unique_raw))),
+            "normalized_text": str(best_observation.get("normalized_text", "")),
+            "selection_reason": selection_reason,
+            "decision_source": decision_source,
+            "engine": "hybrid-ocr-whitelist",
+            "observed_strengths": strengths,
+        }
+        if include_debug:
+            response["ocr_debug"] = _build_ocr_debug_payload(observations, ranked)
+        return response
 
     if (
         single_letter_without_strength
@@ -818,8 +1012,14 @@ def predict_disc_class_ocr(
             " but there was not enough surrounding evidence to trust it automatically."
         )
         decision_source = "ocr_suggestion_only"
-    elif top_exact and not single_letter_without_strength and top_score >= settings.OCR_HIGH_CONFIDENCE and (
+    elif (
+        top_exact
+        and not top_alias
+        and not single_letter_without_strength
+        and top_score >= settings.OCR_HIGH_CONFIDENCE
+        and (
         margin >= settings.OCR_MIN_MARGIN or second_exact == 0
+        )
     ):
         confidence_tier = "high_confidence_exact"
         detected_code = top_code
@@ -831,11 +1031,31 @@ def predict_disc_class_ocr(
     elif top_score >= settings.OCR_MIN_CONFIDENCE and (
         margin >= (settings.OCR_MIN_MARGIN * 0.35) or top_exact or int(top["support_count"]) >= 2
     ):
-        if single_letter_without_strength and top_support_count < 5:
+        if top_alias and top_global_strength_matches == 0:
+            confidence_tier = "uncertain_manual_confirmation_required"
+            selection_reason = (
+                f"OCR only reached '{top_code}' through a confusable alias-like read"
+                " without matching strength support; manual confirmation is required."
+            )
+            decision_source = "ocr_suggestion_only"
+        elif single_letter_without_strength and top_support_count < 5:
             confidence_tier = "uncertain_manual_confirmation_required"
             selection_reason = (
                 f"OCR favored the single-letter code '{top_code}',"
                 " but it still needs confirmation because no strength or longer label structure was recovered."
+            )
+            decision_source = "ocr_suggestion_only"
+        elif len(top_code) <= 2 and not top_exact and top_global_strength_matches == 0:
+            confidence_tier = "uncertain_manual_confirmation_required"
+            selection_reason = (
+                f"OCR favored the short code '{top_code}',"
+                " but the evidence stayed partial and did not include a matching strength."
+            )
+            decision_source = "ocr_suggestion_only"
+        elif not top_exact and top_structured_matches == 0 and top_global_strength_matches == 0 and top_support_count < 3:
+            confidence_tier = "uncertain_manual_confirmation_required"
+            selection_reason = (
+                f"OCR evidence for '{top_code}' was too fragmented to trust automatically; manual confirmation is required."
             )
             decision_source = "ocr_suggestion_only"
         elif len(top_code) <= 2 and not top_exact and top_strength_hits == 0 and margin < settings.OCR_MIN_MARGIN:
@@ -860,7 +1080,7 @@ def predict_disc_class_ocr(
         )
         decision_source = "ocr_suggestion_only"
 
-    return {
+    response = {
         "code": detected_code,
         "confidence": round(top_score, 3),
         "confidence_tier": confidence_tier,
@@ -873,3 +1093,6 @@ def predict_disc_class_ocr(
         "engine": "hybrid-ocr-whitelist",
         "observed_strengths": strengths,
     }
+    if include_debug:
+        response["ocr_debug"] = _build_ocr_debug_payload(observations, ranked)
+    return response

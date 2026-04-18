@@ -21,7 +21,7 @@ from app.models.schemas import (
 )
 from app.services.panel_resolver import apply_standard_panel_resolution
 from app.utils.calibration import build_calibration, pixels_to_mm
-from app.utils.disc_detector import detect_discs
+from app.utils.disc_detector import detect_discs_with_debug
 from app.utils.disc_roi import extract_disc_roi
 from app.utils.measurement import apply_no_zone_rule, calculate_inhibition_result
 from app.utils.zone_detector import build_disc_assignment_masks, measure_zone
@@ -80,6 +80,66 @@ def _build_plate_overlay(image: np.ndarray, results: Sequence[DiscMeasurement]) 
     return overlay
 
 
+def _build_plate_detection_overlay(image: np.ndarray, plate_detection: Optional[PlateDetection]) -> np.ndarray:
+    overlay = image.copy()
+    if plate_detection is None:
+        return overlay
+
+    if plate_detection.shape == "rectangle" and plate_detection.bounding_box is not None:
+        box = plate_detection.bounding_box
+        cv2.rectangle(
+            overlay,
+            (int(round(box.x1)), int(round(box.y1))),
+            (int(round(box.x2)), int(round(box.y2))),
+            (255, 255, 0),
+            3,
+        )
+    else:
+        center = (int(round(plate_detection.center.x)), int(round(plate_detection.center.y)))
+        cv2.circle(overlay, center, int(round(plate_detection.radius_px)), (255, 255, 0), 3)
+    return overlay
+
+
+def _build_disc_detection_overlay(
+    image: np.ndarray,
+    disc_detection_debug: Dict[str, object],
+) -> np.ndarray:
+    overlay = image.copy()
+    for record in disc_detection_debug.get("raw_candidate_records", []):
+        center = (int(round(record["x"])), int(round(record["y"])))
+        cv2.circle(overlay, center, int(round(record["radius"])), (0, 220, 255), 1)
+
+    for record in disc_detection_debug.get("rejected_candidates", []):
+        center = (int(round(record["x"])), int(round(record["y"])))
+        cv2.circle(overlay, center, int(round(record["radius"])), (0, 0, 255), 1)
+        reason = str(record.get("reason", "reject"))[:18]
+        cv2.putText(
+            overlay,
+            reason,
+            (center[0] - 18, max(14, center[1] - int(round(record["radius"])) - 6)),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.35,
+            (0, 0, 255),
+            1,
+            cv2.LINE_AA,
+        )
+
+    for index, record in enumerate(disc_detection_debug.get("accepted_candidates", []), start=1):
+        center = (int(round(record["x"])), int(round(record["y"])))
+        cv2.circle(overlay, center, int(round(record["radius"])), (0, 255, 0), 2)
+        cv2.putText(
+            overlay,
+            f"D{index}",
+            (center[0] - 14, max(16, center[1] - int(round(record["radius"])) - 8)),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.45,
+            (255, 255, 255),
+            2,
+            cv2.LINE_AA,
+        )
+    return overlay
+
+
 def _summarize(results: Sequence[DiscMeasurement]) -> AnalysisSummary:
     review_required_count = sum(1 for result in results if result.review_required)
     corrected_count = sum(1 for result in results if result.status == "corrected")
@@ -107,7 +167,7 @@ def hybrid_analysis_pipeline(
     timings = stage_timings if stage_timings is not None else {}
 
     started = perf_counter()
-    discs = detect_discs(image, plate_detection=plate_detection)
+    discs, disc_detection_debug = detect_discs_with_debug(image, plate_detection=plate_detection)
     timings["disc_detection_seconds"] = perf_counter() - started
     if progress_callback:
         progress_callback(
@@ -123,8 +183,25 @@ def hybrid_analysis_pipeline(
 
     warnings = list(quality_report.warnings) + list(calibration.warnings)
     results: List[DiscMeasurement] = []
+    ocr_debug_entries: List[Dict[str, object]] = []
 
     if not discs:
+        debug_artifacts: Dict[str, object] = {}
+        if include_debug_artifacts:
+            debug_artifacts = {
+                "plate_detection_overlay_base64": _encode_png_base64(_build_plate_detection_overlay(image, plate_detection)),
+                "disc_detection_overlay_base64": _encode_png_base64(
+                    _build_disc_detection_overlay(image, disc_detection_debug)
+                ),
+                "disc_detection_debug": {
+                    "radius_bounds": disc_detection_debug.get("radius_bounds", {}),
+                    "fallback_detection_used": bool(disc_detection_debug.get("fallback_detection_used", False)),
+                    "suspicious_low_count": bool(disc_detection_debug.get("suspicious_low_count", False)),
+                    "raw_candidate_records": disc_detection_debug.get("raw_candidate_records", []),
+                    "accepted_candidates": disc_detection_debug.get("accepted_candidates", []),
+                    "rejected_candidates": disc_detection_debug.get("rejected_candidates", []),
+                },
+            }
         return AnalysisResponse(
             analysis_id=analysis_id,
             status="FAILED",
@@ -137,6 +214,7 @@ def hybrid_analysis_pipeline(
             results=[],
             summary=AnalysisSummary(total_discs=0, failed_count=1),
             warnings=warnings + ["No discs were detected automatically."],
+            debug_artifacts=debug_artifacts,
         )
 
     measurement_total = 0.0
@@ -172,7 +250,7 @@ def hybrid_analysis_pipeline(
         ocr_started = perf_counter()
         crop = extract_disc_roi(image, x, y, radius, expand_ratio=0.24, mask_scale=0.82)
         relaxed_crop = extract_disc_roi(image, x, y, radius, expand_ratio=0.3, mask_scale=0.98)
-        label_prediction = predict_disc_class_ocr(crop)
+        label_prediction = predict_disc_class_ocr(crop, include_debug=include_debug_artifacts)
         if (
             (
                 str(label_prediction.get("confidence_tier", "")) != "high_confidence_exact"
@@ -181,7 +259,11 @@ def hybrid_analysis_pipeline(
             or str(label_prediction.get("code", "UNKNOWN")).upper() == "UNKNOWN"
             or len(str(label_prediction.get("code", ""))) <= 1
         ):
-            label_prediction = predict_disc_class_ocr(crop, fallback_images=[relaxed_crop])
+            label_prediction = predict_disc_class_ocr(
+                crop,
+                fallback_images=[relaxed_crop],
+                include_debug=include_debug_artifacts,
+            )
         ocr_total += perf_counter() - ocr_started
         detected_code = str(label_prediction.get("code", "UNKNOWN")).upper()
         label_confidence = float(label_prediction.get("confidence", 0.0))
@@ -213,6 +295,16 @@ def hybrid_analysis_pipeline(
         overlay_started = perf_counter()
         overlay_image = _build_disc_overlay(image, disc, auto_diameter_px, detected_code if detected_code != "UNKNOWN" else f"D{index}")
         overlay_total += perf_counter() - overlay_started
+        if include_debug_artifacts:
+            ocr_debug_entries.append(
+                {
+                    "disc_index": index,
+                    "disc_center": {"x": round(x, 2), "y": round(y, 2)},
+                    "selected_code": detected_code,
+                    "confidence_tier": label_tier,
+                    "ocr_debug": label_prediction.get("ocr_debug", {}),
+                }
+            )
         results.append(
             DiscMeasurement(
                 disc_id=f"disc-{index}",
@@ -286,10 +378,23 @@ def hybrid_analysis_pipeline(
     if include_debug_artifacts:
         debug_artifacts = {
             "plate_overlay_base64": _encode_png_base64(plate_overlay),
+            "plate_detection_overlay_base64": _encode_png_base64(_build_plate_detection_overlay(image, plate_detection)),
+            "disc_detection_overlay_base64": _encode_png_base64(
+                _build_disc_detection_overlay(image, disc_detection_debug)
+            ),
+            "ocr_debug": ocr_debug_entries,
             "calibration_summary": {
                 "disc_count": calibration.disc_count,
                 "average_disc_diameter_px": calibration.average_disc_diameter_px,
                 "mm_per_pixel": calibration.mm_per_pixel,
+            },
+            "disc_detection_debug": {
+                "radius_bounds": disc_detection_debug.get("radius_bounds", {}),
+                "fallback_detection_used": bool(disc_detection_debug.get("fallback_detection_used", False)),
+                "suspicious_low_count": bool(disc_detection_debug.get("suspicious_low_count", False)),
+                "raw_candidate_records": disc_detection_debug.get("raw_candidate_records", []),
+                "accepted_candidates": disc_detection_debug.get("accepted_candidates", []),
+                "rejected_candidates": disc_detection_debug.get("rejected_candidates", []),
             },
         }
     timings["result_serialization_seconds"] = perf_counter() - started
