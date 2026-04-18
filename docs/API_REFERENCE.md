@@ -11,7 +11,9 @@ All application endpoints are mounted under `/api`.
 
 | Method | Path | Purpose |
 | --- | --- | --- |
-| `POST` | `/api/analyze` | Upload an image and create a new analysis session |
+| `POST` | `/api/analyze` | Upload an image, create an async analysis job, and return immediately with `analysis_id` |
+| `GET` | `/api/analyze/{analysis_id}/status` | Poll the async job state |
+| `GET` | `/api/analyze/{analysis_id}/result` | Fetch the final analysis payload after completion |
 | `GET` | `/api/analysis/{analysis_id}` | Fetch a previously saved analysis session |
 | `POST` | `/api/analysis/{analysis_id}/review` | Save operator corrections for one or more discs |
 | `GET` | `/api/analysis/{analysis_id}/export` | Export the saved result table as CSV |
@@ -20,7 +22,7 @@ All application endpoints are mounted under `/api`.
 ## `POST /api/analyze`
 
 ### Purpose
-Accepts an uploaded image, runs plate analysis, persists the session, and returns the complete analysis payload.
+Accepts an uploaded image, creates a background analysis job, persists the upload, and returns immediately with an `analysis_id`.
 
 ### Request
 - Content type: `multipart/form-data`
@@ -44,77 +46,11 @@ curl -X POST "http://127.0.0.1:8000/api/analyze" \
 ```json
 {
   "analysis_id": "6d8f5e8d-93ff-4a4e-b75c-8a93ad8f1d92",
-  "status": "REQUIRES_MANUAL_REVIEW",
-  "algorithm_version": "zone-measurement-2.0.0",
+  "status": "queued",
   "created_at": "2026-04-18T09:11:22.947755+00:00",
-  "image_filename": "sample_plate.jpeg",
-  "plate_detection": {
-    "center": {"x": 622.5, "y": 618.4},
-    "radius_px": 520.8,
-    "clipped": false,
-    "clip_fraction": 0.0,
-    "method": "hough"
-  },
-  "quality_report": {
-    "blur_score": 74.22,
-    "brightness": 167.95,
-    "contrast": 25.87,
-    "glare_fraction": 0.0041,
-    "review_required": false,
-    "warnings": []
-  },
-  "calibration": {
-    "disc_diameter_mm": 6.0,
-    "average_disc_diameter_px": 44.0,
-    "mm_per_pixel": 0.1363,
-    "disc_count": 5,
-    "spread_px": 1.5,
-    "method": "median-disc-diameter"
-  },
-  "summary": {
-    "total_discs": 5,
-    "review_required_count": 2,
-    "corrected_count": 0,
-    "failed_count": 0,
-    "auto_count": 3
-  },
-  "warnings": [],
-  "debug_artifacts": {
-    "plate_overlay_base64": "..."
-  },
-  "results": [
-    {
-      "disc_id": "disc-1",
-      "index": 1,
-      "detected_code": "FOX",
-      "final_code": "FOX",
-      "label_confidence": 0.94,
-      "label_confidence_tier": "probable_match",
-      "label_candidates": ["FOX", "FOS"],
-      "whitelist_candidates_considered": ["FOX", "FOS", "CN"],
-      "label_engine": "hybrid-ocr-whitelist",
-      "label_decision_source": "ocr+whitelist_correction",
-      "label_selection_reason": "Rotation voting and whitelist scoring favored 'FOX' over nearby alternatives; manual confirmation is still required.",
-      "raw_ocr_text": "FO | 30",
-      "normalized_ocr_text": "FO 30",
-      "layout_suggestion": null,
-      "auto_diameter_px": 196.2,
-      "auto_diameter_mm": 26.76,
-      "corrected_diameter_mm": null,
-      "final_diameter_mm": 26.76,
-      "measurement_confidence": 0.81,
-      "overall_confidence": 0.88,
-      "source": "auto",
-      "status": "review_required",
-      "review_required": true,
-      "no_zone_fallback_used": false,
-      "warnings": [],
-      "measurement_method": "hybrid-zone-boundary",
-      "calibration_mm_per_pixel": 0.1363,
-      "crop_image_base64": "...",
-      "overlay_image_base64": "..."
-    }
-  ]
+  "message": "Upload received. Analysis job queued.",
+  "status_url": "/api/analyze/6d8f5e8d-93ff-4a4e-b75c-8a93ad8f1d92/status",
+  "result_url": "/api/analyze/6d8f5e8d-93ff-4a4e-b75c-8a93ad8f1d92/result"
 }
 ```
 
@@ -124,10 +60,56 @@ curl -X POST "http://127.0.0.1:8000/api/analyze" \
 - `400`: image decode error from `load_image_from_bytes`
 - `413`: `Image exceeds the <n> MB upload limit.`
 
+## `GET /api/analyze/{analysis_id}/status`
+
+### Purpose
+Returns the current async job state without re-running analysis.
+
+### Status Values
+- `queued`
+- `processing`
+- `completed`
+- `failed`
+
+If the backend restarts while a job is still `queued` or `processing`, startup recovery marks that job as `failed` with a retry message instead of leaving it stuck indefinitely.
+
+### Example Response
+```json
+{
+  "analysis_id": "6d8f5e8d-93ff-4a4e-b75c-8a93ad8f1d92",
+  "status": "processing",
+  "created_at": "2026-04-18T09:11:22.947755+00:00",
+  "updated_at": "2026-04-18T09:12:03.128312+00:00",
+  "image_filename": "sample_plate.jpeg",
+  "message": "Processed disc 2 of 5.",
+  "progress": 0.61,
+  "current_stage": "disc_analysis",
+  "error": null,
+  "result_available": false,
+  "timings": {
+    "image_decode_seconds": 0.09,
+    "plate_extraction_seconds": 3.12,
+    "disc_detection_seconds": 3.67
+  },
+  "status_url": "/api/analyze/6d8f5e8d-93ff-4a4e-b75c-8a93ad8f1d92/status",
+  "result_url": "/api/analyze/6d8f5e8d-93ff-4a4e-b75c-8a93ad8f1d92/result"
+}
+```
+
+## `GET /api/analyze/{analysis_id}/result`
+
+### Purpose
+Returns the final `AnalysisResponse` after the async job has completed.
+
+### Response
+- `200`: full `AnalysisResponse`
+- `409`: job is still `queued` or `processing`
+- `409`: job is `failed`, with backend error detail
+
 ## `GET /api/analysis/{analysis_id}`
 
 ### Purpose
-Returns the persisted analysis payload for an existing `analysis_id`.
+Returns the persisted analysis payload for a completed `analysis_id`. This remains as a compatibility endpoint for saved sessions.
 
 ### Example
 ```bash

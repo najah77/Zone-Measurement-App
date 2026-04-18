@@ -40,6 +40,7 @@ class Settings:
     MEASUREMENT_MIN_CONFIDENCE: float = float(os.getenv("MEASUREMENT_MIN_CONFIDENCE", "0.6"))
     DISC_DIAMETER_MM: float = 6.0
     MAX_DISCS: int = int(os.getenv("MAX_DISCS", "24"))
+    ANALYSIS_WORKERS: int = int(os.getenv("ANALYSIS_WORKERS", "2"))
 
 
 settings = Settings()

@@ -11,8 +11,10 @@ The most practical deployment for the current codebase is:
 - reverse proxy or separate subdomain setup for frontend and backend
 
 This recommendation is based on the real implementation:
-- the backend writes review state and original uploads to disk
+- the backend writes review state, job status, and original uploads to disk
 - the frontend can now be built against a configurable backend base URL
+- the analyze path is now async-job based, so mobile traffic no longer depends on one long blocking HTTP response
+- reverse proxies such as Cloudflare no longer need to wait for OCR and zone measurement to finish inside a single request
 - there is no Docker, container orchestration, or database layer in the repo today
 - native mobile packaging still needs platform-specific production hardening
 
@@ -66,6 +68,7 @@ This recommendation is based on the real implementation:
 | `OCR_MIN_MARGIN` | No | Score margin between top OCR candidates | `0.12` |
 | `MEASUREMENT_MIN_CONFIDENCE` | No | Lower threshold for confident measurement acceptance | `0.6` |
 | `MAX_DISCS` | No | Upper bound for detected discs in one image | `24` |
+| `ANALYSIS_WORKERS` | No | Number of background analysis worker threads | `2` |
 | `HF_API_KEY` | No | Present in config but not used in the active API path | empty |
 | `OPENAI_API_KEY` | No | Present in config but not used in the active API path | empty |
 | `USE_HF_VISION` | No | Present in config but not used in the active API path | `false` |
@@ -245,8 +248,10 @@ If the frontend is hosted separately:
    - frontend loads
 5. Run a real image through the app.
 6. Confirm that a new folder appears under `STORAGE_ROOT/<analysis_id>`.
-7. Save a review and confirm `analysis.json` updates.
-8. Export CSV through the backend export endpoint.
+7. Confirm `status.json` transitions from `queued` to `processing` to `completed`.
+8. Save a review and confirm `analysis.json` and `result.json` update.
+9. Export CSV through the backend export endpoint.
+10. Restart the backend once during UAT and confirm any in-flight job moves to `failed` with an interrupted-job message rather than remaining stuck forever.
 
 ## Production Delivery Notes
 - Use HTTPS for both app and API.
@@ -258,12 +263,13 @@ If the frontend is hosted separately:
 ## Post-Deployment Validation Checklist
 - Frontend home screen loads over HTTPS
 - Backend `/docs` loads
-- Upload accepts a real plate image
-- `POST /api/analyze` returns an `analysis_id`
-- `GET /api/analysis/{analysis_id}` returns the same saved session
+- Upload accepts a real plate image and `POST /api/analyze` returns quickly with an `analysis_id`
+- `GET /api/analyze/{analysis_id}/status` reaches `completed`
+- If the backend is restarted mid-job, the same status endpoint returns `failed` with a retry message instead of hanging in `processing`
+- `GET /api/analyze/{analysis_id}/result` returns the final saved session
 - Save review updates `final_code` and `final_diameter_mm`
 - `GET /api/analysis/{analysis_id}/export` returns CSV
-- A sample real plate still shows overlay, detected discs, and saved JSON under `STORAGE_ROOT`
+- A sample real plate still shows detected discs and saved JSON under `STORAGE_ROOT`
 
 ## Deployment Risks Still Outside The Current Repo
 - Android release configuration still needs a real application ID and release signing before mobile store distribution.

@@ -45,6 +45,28 @@ The Flutter app loads, but analysis fails with a network or timeout error.
   - `/docs`
   - `/api/openapi.json`
 
+## Analysis Submit, Polling, Or Result Fetch Fails
+
+### Symptom
+The app submits an image, but analysis appears to stall, fail, or never reach the review screen.
+
+### Actual Behavior In This Repo
+Real image analysis can take around 1 to 3 minutes on the current backend pipeline, especially for high-resolution plate images.
+
+### Current Frontend Behavior
+- `POST /api/analyze` should return quickly with an `analysis_id`
+- the Flutter client then polls `GET /api/analyze/{analysis_id}/status`
+- once status reaches `completed`, the client fetches `GET /api/analyze/{analysis_id}/result`
+- JSON parsing is offloaded from the main UI thread
+- large preview images are decoded lazily instead of during widget build
+
+### If The Flow Still Fails
+- confirm the backend is not stalled
+- confirm the frontend points to the correct `BACKEND_BASE_URL`
+- confirm the installed APK is a build that includes the async submit/poll/result flow
+- inspect `status.json` under `STORAGE_ROOT/<analysis_id>`
+- remember that `GET /api/analyze/{analysis_id}/result` returns `409` until the job is complete
+
 ## Browser CORS Error
 
 ### Symptom
@@ -74,6 +96,22 @@ The backend now reads allowed origins from `CORS_ALLOW_ORIGINS`.
 - Upload a valid image file
 - Increase `MAX_UPLOAD_BYTES` if your hosted environment needs a larger limit
 
+## Proxy Or Cloudflare 524 Errors
+
+### Symptom
+The old mobile build waits on one long analyze request and receives `524` from Cloudflare or another reverse proxy.
+
+### Current Behavior
+The production-safe API path is now asynchronous. `POST /api/analyze` returns quickly, and the app polls status instead of waiting for OCR and measurement to finish inside one request.
+
+### Fix
+- restart the backend after deploying the async API changes
+- rebuild and reinstall the Flutter app so it uses the new submit/poll/result flow
+- verify the app is calling:
+  - `POST /api/analyze`
+  - `GET /api/analyze/{analysis_id}/status`
+  - `GET /api/analyze/{analysis_id}/result`
+
 ## Analysis Saves Fail Or Records Disappear
 
 ### Symptom
@@ -86,6 +124,19 @@ The backend stores sessions on disk. If `STORAGE_ROOT` is unwritable or ephemera
 - Point `STORAGE_ROOT` to a persistent writable directory
 - Verify the backend process user can create folders and files there
 - Back up the storage path regularly
+
+## Job Stays In `queued` Or `processing`
+
+### Symptom
+The client keeps polling, but the job never reaches `completed`.
+
+### Current Safeguard
+On backend startup, any orphaned `queued` or `processing` job is marked `failed` with the message `Analysis was interrupted before completion. Please retry the upload.`
+
+### Fix
+- check whether the backend restarted mid-analysis
+- confirm the backend can write to `STORAGE_ROOT`
+- if the job is now `failed`, re-upload the image and start a new analysis
 
 ## OCR Is Weak Or Requires Manual Confirmation
 
@@ -129,6 +180,14 @@ That file currently covers only a limited subset of antibiotic codes. If a detec
 
 ### iOS
 - `ios/Runner/Info.plist` still needs camera and photo-library usage descriptions before production distribution
+
+## Windows Camera Capture
+
+### Symptom
+Windows desktop shows an ImagePicker camera delegate error.
+
+### Current Behavior
+The frontend now treats camera capture as unsupported on Windows desktop and hides the broken camera action. Use file upload instead.
 
 ## Useful Verification Commands
 ```powershell

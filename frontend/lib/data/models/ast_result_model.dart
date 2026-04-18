@@ -1,5 +1,94 @@
 import '../../core/models/analysis_result.dart';
 
+class AnalysisSubmissionModel {
+  final String analysisId;
+  final String status;
+  final DateTime createdAt;
+  final String message;
+  final String statusUrl;
+  final String resultUrl;
+
+  const AnalysisSubmissionModel({
+    required this.analysisId,
+    required this.status,
+    required this.createdAt,
+    required this.message,
+    required this.statusUrl,
+    required this.resultUrl,
+  });
+
+  factory AnalysisSubmissionModel.fromJson(Map<String, dynamic> json) {
+    return AnalysisSubmissionModel(
+      analysisId: json['analysis_id'] as String,
+      status: json['status'] as String? ?? 'queued',
+      createdAt: DateTime.tryParse(json['created_at'] as String? ?? '') ??
+          DateTime.now().toUtc(),
+      message: json['message'] as String? ?? '',
+      statusUrl: json['status_url'] as String? ?? '',
+      resultUrl: json['result_url'] as String? ?? '',
+    );
+  }
+}
+
+class AnalysisJobStatusModel {
+  final String analysisId;
+  final String status;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final String? imageFilename;
+  final String message;
+  final double progress;
+  final String? currentStage;
+  final String? error;
+  final bool resultAvailable;
+  final Map<String, double> timings;
+  final String? statusUrl;
+  final String? resultUrl;
+
+  const AnalysisJobStatusModel({
+    required this.analysisId,
+    required this.status,
+    required this.createdAt,
+    required this.updatedAt,
+    required this.imageFilename,
+    required this.message,
+    required this.progress,
+    required this.currentStage,
+    required this.error,
+    required this.resultAvailable,
+    required this.timings,
+    required this.statusUrl,
+    required this.resultUrl,
+  });
+
+  bool get isTerminal => status == 'completed' || status == 'failed';
+  bool get isCompleted => status == 'completed';
+  bool get isFailed => status == 'failed';
+
+  factory AnalysisJobStatusModel.fromJson(Map<String, dynamic> json) {
+    return AnalysisJobStatusModel(
+      analysisId: json['analysis_id'] as String,
+      status: json['status'] as String? ?? 'queued',
+      createdAt: DateTime.tryParse(json['created_at'] as String? ?? '') ??
+          DateTime.now().toUtc(),
+      updatedAt: DateTime.tryParse(json['updated_at'] as String? ?? '') ??
+          DateTime.now().toUtc(),
+      imageFilename: json['image_filename'] as String?,
+      message: json['message'] as String? ?? '',
+      progress: (json['progress'] as num? ?? 0).toDouble(),
+      currentStage: json['current_stage'] as String?,
+      error: json['error'] as String?,
+      resultAvailable: json['result_available'] as bool? ?? false,
+      timings: Map<String, double>.fromEntries(
+        (json['timings'] as Map<String, dynamic>? ?? const {}).entries.map(
+            (entry) => MapEntry(entry.key, (entry.value as num).toDouble())),
+      ),
+      statusUrl: json['status_url'] as String?,
+      resultUrl: json['result_url'] as String?,
+    );
+  }
+}
+
 class QualityReportModel {
   final double blurScore;
   final double brightness;

@@ -101,6 +101,42 @@ class AnalysisResponse(BaseModel):
     debug_artifacts: Dict[str, Any] = Field(default_factory=dict)
 
 
+class AnalysisJobStatusResponse(BaseModel):
+    analysis_id: str
+    status: str = "queued"
+    created_at: datetime
+    updated_at: datetime
+    image_filename: Optional[str] = None
+    message: str = ""
+    progress: float = 0.0
+    current_stage: Optional[str] = None
+    error: Optional[str] = None
+    result_available: bool = False
+    timings: Dict[str, float] = Field(default_factory=dict)
+    status_url: Optional[str] = None
+    result_url: Optional[str] = None
+
+
+class AnalysisSubmissionResponse(BaseModel):
+    analysis_id: str
+    status: str = "queued"
+    created_at: datetime
+    message: str = ""
+    status_url: str
+    result_url: str
+
+
+class AnalysisErrorRecord(BaseModel):
+    analysis_id: str
+    status: str = "failed"
+    failed_at: datetime
+    image_filename: Optional[str] = None
+    current_stage: Optional[str] = None
+    message: str = ""
+    technical_details: Optional[str] = None
+    timings: Dict[str, float] = Field(default_factory=dict)
+
+
 class ReviewDiscUpdate(BaseModel):
     disc_id: str
     corrected_code: Optional[str] = None

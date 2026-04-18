@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'dart:io';
+
+import '../../core/platform/platform_capabilities.dart';
 import '../../core/theme/colors.dart';
 import '../../core/theme/text_styles.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/widgets/custom_app_bar.dart';
 import '../../core/widgets/primary_button.dart';
+import '../../core/widgets/selected_image_preview.dart';
 import 'image_upload_viewmodel.dart';
 
 class ImageUploadScreen extends StatefulWidget {
@@ -23,10 +25,14 @@ class _ImageUploadScreenState extends State<ImageUploadScreen> {
       final args = ModalRoute.of(context)?.settings.arguments as Map?;
       final viewModel = context.read<ImageUploadViewModel>();
       String? error;
-      if (args != null && args['isCamera'] == true) {
+      if (args != null &&
+          args['isCamera'] == true &&
+          PlatformCapabilities.supportsCameraCapture) {
         error = await viewModel.pickFromCamera();
       } else if (args != null && args['isCamera'] == false) {
         error = await viewModel.pickFromGallery();
+      } else if (args != null && args['isCamera'] == true) {
+        error = PlatformCapabilities.cameraUnavailableMessage;
       }
 
       if (context.mounted && error != null) {
@@ -67,8 +73,8 @@ class _ImageUploadScreenState extends State<ImageUploadScreen> {
                           ClipRRect(
                             borderRadius: BorderRadius.circular(
                                 AppConstants.cardBorderRadius - 2),
-                            child: Image.file(
-                              File(viewModel.selectedImage!.path),
+                            child: SelectedImagePreview(
+                              image: viewModel.selectedImage!,
                               fit: BoxFit.cover,
                             ),
                           ),
@@ -117,25 +123,27 @@ class _ImageUploadScreenState extends State<ImageUploadScreen> {
             // Selection Controls
             Row(
               children: [
-                Expanded(
-                  child: _SelectionButton(
-                    icon: Icons.camera_alt,
-                    label: 'Camera',
-                    onTap: () async {
-                      final error = await viewModel.pickFromCamera();
-                      if (context.mounted && error != null) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(error)),
-                        );
-                      }
-                    },
+                if (PlatformCapabilities.supportsCameraCapture) ...[
+                  Expanded(
+                    child: _SelectionButton(
+                      icon: Icons.camera_alt,
+                      label: 'Camera',
+                      onTap: () async {
+                        final error = await viewModel.pickFromCamera();
+                        if (context.mounted && error != null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(error)),
+                          );
+                        }
+                      },
+                    ),
                   ),
-                ),
-                const SizedBox(width: 16),
+                  const SizedBox(width: 16),
+                ],
                 Expanded(
                   child: _SelectionButton(
                     icon: Icons.photo_library,
-                    label: 'Gallery',
+                    label: PlatformCapabilities.libraryActionLabel,
                     onTap: () async {
                       final error = await viewModel.pickFromGallery();
                       if (context.mounted && error != null) {
@@ -169,6 +177,13 @@ class _ImageUploadScreenState extends State<ImageUploadScreen> {
                       style: AppTextStyles.bodyMedium),
                   Text('3. Retake the image if labels look blurred.',
                       style: AppTextStyles.bodyMedium),
+                  if (!PlatformCapabilities.supportsCameraCapture) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      'Camera capture is unavailable on this platform, so use file upload instead.',
+                      style: AppTextStyles.bodyMedium,
+                    ),
+                  ],
                 ],
               ),
             ),

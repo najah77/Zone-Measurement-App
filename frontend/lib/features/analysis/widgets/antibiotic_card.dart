@@ -1,11 +1,9 @@
-import 'dart:convert';
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 
 import '../../../core/models/analysis_result.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/text_styles.dart';
+import '../../../core/widgets/async_base64_image.dart';
 
 class AntibioticCard extends StatelessWidget {
   const AntibioticCard({
@@ -271,8 +269,6 @@ class _PreviewImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Uint8List? bytes = _decodeImage(imageBase64);
-
     return Container(
       width: 104,
       height: 104,
@@ -282,21 +278,21 @@ class _PreviewImage extends StatelessWidget {
         border: Border.all(color: AppColors.border),
       ),
       clipBehavior: Clip.antiAlias,
-      child: bytes == null
+      child: imageBase64 == null || imageBase64!.isEmpty
           ? const Center(
               child: Icon(Icons.image_not_supported_outlined,
-                  color: AppColors.textSecondary))
-          : Image.memory(bytes, fit: BoxFit.cover),
+                  color: AppColors.textSecondary),
+            )
+          : AsyncBase64Image(
+              base64Value: imageBase64,
+              builder: (context, bytes) =>
+                  Image.memory(bytes, fit: BoxFit.cover, gaplessPlayback: true),
+              error: const Center(
+                child: Icon(Icons.image_not_supported_outlined,
+                    color: AppColors.textSecondary),
+              ),
+            ),
     );
-  }
-
-  Uint8List? _decodeImage(String? value) {
-    if (value == null || value.isEmpty) return null;
-    try {
-      return base64Decode(value);
-    } catch (_) {
-      return null;
-    }
   }
 }
 

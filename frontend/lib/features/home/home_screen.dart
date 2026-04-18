@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../core/theme/colors.dart';
 import '../../core/theme/text_styles.dart';
 import '../../core/constants/app_constants.dart';
+import '../../core/platform/platform_capabilities.dart';
 import '../../core/widgets/custom_app_bar.dart';
 import 'home_viewmodel.dart';
 
@@ -12,6 +14,7 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final viewModel = context.read<HomeViewModel>();
+    final actionColumns = PlatformCapabilities.supportsCameraCapture ? 2 : 1;
 
     return Scaffold(
       appBar: const CustomAppBar(
@@ -38,21 +41,24 @@ class HomeScreen extends StatelessWidget {
             // Main Actions Grid
             Expanded(
               child: GridView.count(
-                crossAxisCount: 2,
+                crossAxisCount: actionColumns,
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
                 children: [
-                  _HomeActionCard(
-                    icon: Icons.camera_alt_rounded,
-                    label: AppConstants.captureImage,
-                    color: AppColors.primary,
-                    onTap: () => viewModel.navigateToUpload(context, isCamera: true),
-                  ),
+                  if (PlatformCapabilities.supportsCameraCapture)
+                    _HomeActionCard(
+                      icon: Icons.camera_alt_rounded,
+                      label: AppConstants.captureImage,
+                      color: AppColors.primary,
+                      onTap: () =>
+                          viewModel.navigateToUpload(context, isCamera: true),
+                    ),
                   _HomeActionCard(
                     icon: Icons.photo_library_rounded,
-                    label: AppConstants.uploadGallery,
+                    label: PlatformCapabilities.libraryActionLabel,
                     color: AppColors.secondary,
-                    onTap: () => viewModel.navigateToUpload(context, isCamera: false),
+                    onTap: () =>
+                        viewModel.navigateToUpload(context, isCamera: false),
                   ),
                 ],
               ),
@@ -75,9 +81,11 @@ class HomeScreen extends StatelessWidget {
                         backgroundColor: AppColors.primaryLight,
                         child: Icon(Icons.science, color: AppColors.primary),
                       ),
-                      title: Text('Sample #${100 - index}', style: AppTextStyles.labelLarge),
+                      title: Text('Sample #${100 - index}',
+                          style: AppTextStyles.labelLarge),
                       subtitle: const Text('Analyzed just now'),
-                      trailing: const Icon(Icons.chevron_right, color: AppColors.textSecondary),
+                      trailing: const Icon(Icons.chevron_right,
+                          color: AppColors.textSecondary),
                     ),
                   );
                 },

@@ -1,15 +1,13 @@
-import 'dart:convert';
-import 'dart:io';
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
-import '../../core/constants/app_constants.dart';
 import '../../core/theme/colors.dart';
 import '../../core/theme/text_styles.dart';
+import '../../core/widgets/async_base64_image.dart';
 import '../../core/widgets/custom_app_bar.dart';
 import '../../core/widgets/primary_button.dart';
+import '../../core/widgets/selected_image_preview.dart';
 import '../../data/models/ast_result_model.dart';
 import 'analysis_viewmodel.dart';
 import 'widgets/antibiotic_card.dart';
@@ -19,10 +17,10 @@ class AnalysisScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final imagePath = ModalRoute.of(context)?.settings.arguments as String?;
+    final imageFile = ModalRoute.of(context)?.settings.arguments as XFile?;
 
     return ChangeNotifierProvider(
-      create: (_) => AnalysisViewModel(imagePath: imagePath),
+      create: (_) => AnalysisViewModel(imageFile: imageFile),
       child: const _AnalysisScreenContent(),
     );
   }
@@ -39,9 +37,18 @@ class _AnalysisScreenContent extends StatelessWidget {
     return Scaffold(
       appBar: const CustomAppBar(title: 'Review Analysis'),
       body: viewModel.errorMessage != null
-          ? _AnalysisError(message: viewModel.errorMessage!)
+          ? _AnalysisError(
+              message: viewModel.errorMessage!,
+              analysisId: viewModel.analysisId,
+              onRetry: viewModel.retryStatusCheck,
+            )
           : viewModel.isLoading || session == null
-              ? const _AnalysisLoading()
+              ? _AnalysisLoading(
+                  analysisId: viewModel.analysisId,
+                  message: viewModel.statusMessage,
+                  progress: viewModel.progress,
+                  currentStage: viewModel.jobStatus?.currentStage,
+                )
               : Stack(
                   children: [
                     SingleChildScrollView(
@@ -50,7 +57,7 @@ class _AnalysisScreenContent extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           _ImagePreviewCard(
-                            imagePath: viewModel.imagePath,
+                            imageFile: viewModel.imageFile,
                             overlayBase64:
                                 session.debugArtifacts['plate_overlay_base64']
                                     as String?,
@@ -102,34 +109,84 @@ class _AnalysisScreenContent extends StatelessWidget {
 }
 
 class _AnalysisLoading extends StatelessWidget {
-  const _AnalysisLoading();
+  const _AnalysisLoading({
+    required this.analysisId,
+    required this.message,
+    required this.progress,
+    required this.currentStage,
+  });
+
+  final String? analysisId;
+  final String message;
+  final double progress;
+  final String? currentStage;
 
   @override
   Widget build(BuildContext context) {
+    final hasProgress = progress > 0 && progress < 1;
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const CircularProgressIndicator(color: AppColors.primary),
-          const SizedBox(height: 24),
-          Text('Running automated plate analysis',
-              style: AppTextStyles.titleMedium),
-          const SizedBox(height: 8),
-          Text(
-            'Detecting the plate, discs, labels, and inhibition zones.',
-            style: AppTextStyles.bodyMedium,
-            textAlign: TextAlign.center,
-          ),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 240,
+              child: hasProgress
+                  ? LinearProgressIndicator(
+                      value: progress,
+                      minHeight: 10,
+                      color: AppColors.primary,
+                      backgroundColor: AppColors.border,
+                    )
+                  : const CircularProgressIndicator(color: AppColors.primary),
+            ),
+            const SizedBox(height: 24),
+            Text('Running automated plate analysis',
+                style: AppTextStyles.titleMedium),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              style: AppTextStyles.bodyMedium,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Real images can take several minutes. The app is polling job status in the background.',
+              style: AppTextStyles.bodyMedium,
+              textAlign: TextAlign.center,
+            ),
+            if (currentStage != null || analysisId != null) ...[
+              const SizedBox(height: 16),
+              if (currentStage != null)
+                Text(
+                  'Stage: ${currentStage!.replaceAll('_', ' ')}',
+                  style: AppTextStyles.bodyMedium,
+                ),
+              if (analysisId != null)
+                Text(
+                  'Analysis ID: ${analysisId!.substring(0, 8)}',
+                  style: AppTextStyles.bodyMedium
+                      .copyWith(color: AppColors.textSecondary),
+                ),
+            ],
+          ],
+        ),
       ),
     );
   }
 }
 
 class _AnalysisError extends StatelessWidget {
-  const _AnalysisError({required this.message});
+  const _AnalysisError({
+    required this.message,
+    required this.analysisId,
+    required this.onRetry,
+  });
 
   final String message;
+  final String? analysisId;
+  final Future<void> Function() onRetry;
 
   @override
   Widget build(BuildContext context) {
@@ -147,6 +204,19 @@ class _AnalysisError extends StatelessWidget {
             const SizedBox(height: 8),
             Text(message,
                 style: AppTextStyles.bodyMedium, textAlign: TextAlign.center),
+            if (analysisId != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Analysis ID: ${analysisId!.substring(0, 8)}',
+                style: AppTextStyles.bodyMedium
+                    .copyWith(color: AppColors.textSecondary),
+              ),
+            ],
+            const SizedBox(height: 20),
+            PrimaryButton(
+              text: 'Retry Status Check',
+              onPressed: () => onRetry(),
+            ),
           ],
         ),
       ),
@@ -156,17 +226,15 @@ class _AnalysisError extends StatelessWidget {
 
 class _ImagePreviewCard extends StatelessWidget {
   const _ImagePreviewCard({
-    required this.imagePath,
+    required this.imageFile,
     required this.overlayBase64,
   });
 
-  final String? imagePath;
+  final XFile? imageFile;
   final String? overlayBase64;
 
   @override
   Widget build(BuildContext context) {
-    final Uint8List? overlayBytes = _decodeImage(overlayBase64);
-
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -183,16 +251,29 @@ class _ImagePreviewCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
             child: AspectRatio(
               aspectRatio: 1.2,
-              child: overlayBytes != null
-                  ? Image.memory(overlayBytes, fit: BoxFit.cover)
-                  : imagePath == null
+              child: overlayBase64 != null && overlayBase64!.isNotEmpty
+                  ? AsyncBase64Image(
+                      base64Value: overlayBase64,
+                      builder: (context, bytes) =>
+                          Image.memory(bytes, fit: BoxFit.cover),
+                      error: imageFile == null
+                          ? Container(color: AppColors.background)
+                          : SelectedImagePreview(
+                              image: imageFile!,
+                              fit: BoxFit.cover,
+                            ),
+                    )
+                  : imageFile == null
                       ? Container(color: AppColors.background)
-                      : Image.file(File(imagePath!), fit: BoxFit.cover),
+                      : SelectedImagePreview(
+                          image: imageFile!,
+                          fit: BoxFit.cover,
+                        ),
             ),
           ),
           const SizedBox(height: 12),
           Text(
-            overlayBytes != null
+            overlayBase64 != null && overlayBase64!.isNotEmpty
                 ? 'Plate overlay preview with disc centers and measured zones.'
                 : 'Original capture preview.',
             style: AppTextStyles.bodyMedium,
@@ -200,15 +281,6 @@ class _ImagePreviewCard extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  Uint8List? _decodeImage(String? value) {
-    if (value == null || value.isEmpty) return null;
-    try {
-      return base64Decode(value);
-    } catch (_) {
-      return null;
-    }
   }
 }
 
@@ -220,11 +292,11 @@ class _SummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final qualityWarnings = session.qualityReport.warnings;
-    final combinedWarnings = <String>[
+    final combinedWarnings = <String>{
       ...session.warnings,
       ...qualityWarnings,
       ...session.calibration.warnings,
-    ].toSet().toList();
+    }.toList();
 
     return Container(
       padding: const EdgeInsets.all(18),

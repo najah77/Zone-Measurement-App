@@ -3,7 +3,8 @@ from __future__ import annotations
 import base64
 import logging
 from datetime import datetime, timezone
-from typing import Dict, List, Optional, Sequence, Tuple
+from time import perf_counter
+from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
 import cv2
 import numpy as np
@@ -26,6 +27,7 @@ from app.utils.measurement import apply_no_zone_rule, calculate_inhibition_resul
 from app.utils.zone_detector import measure_zone
 
 logger = logging.getLogger(__name__)
+ProgressCallback = Callable[[float, str, str, Optional[Dict[str, float]]], None]
 
 
 def _encode_png_base64(image: np.ndarray) -> str:
@@ -99,9 +101,25 @@ def hybrid_analysis_pipeline(
     quality_report: QualityReport,
     image_filename: Optional[str] = None,
     include_debug_artifacts: bool = False,
+    progress_callback: Optional[ProgressCallback] = None,
+    stage_timings: Optional[Dict[str, float]] = None,
 ) -> AnalysisResponse:
+    timings = stage_timings if stage_timings is not None else {}
+
+    started = perf_counter()
     discs = detect_discs(image)
+    timings["disc_detection_seconds"] = perf_counter() - started
+    if progress_callback:
+        progress_callback(
+            0.4,
+            "disc_detection",
+            f"Detected {len(discs)} disc(s).",
+            timings.copy(),
+        )
+
+    started = perf_counter()
     calibration = build_calibration(discs)
+    timings["calibration_seconds"] = perf_counter() - started
 
     warnings = list(quality_report.warnings) + list(calibration.warnings)
     results: List[DiscMeasurement] = []
@@ -121,10 +139,18 @@ def hybrid_analysis_pipeline(
             warnings=warnings + ["No discs were detected automatically."],
         )
 
+    measurement_total = 0.0
+    ocr_total = 0.0
+    overlay_total = 0.0
+    total_discs = len(discs)
+
     for index, disc in enumerate(discs, start=1):
         x, y, radius = disc
         disc_diameter_px = round(radius * 2.0, 2)
+
+        measurement_started = perf_counter()
         zone_result = measure_zone(image, disc)
+        measurement_total += perf_counter() - measurement_started
         auto_diameter_px = float(zone_result["diameter_px"])
         auto_diameter_mm = calculate_inhibition_result(
             zone_diameter_px=auto_diameter_px,
@@ -135,8 +161,10 @@ def hybrid_analysis_pipeline(
         if bool(zone_result["no_zone_fallback_used"]):
             auto_diameter_mm = apply_no_zone_rule(auto_diameter_mm)
 
+        ocr_started = perf_counter()
         crop = extract_disc_roi(image, x, y, radius, expand_ratio=0.24, mask_scale=0.8)
         label_prediction = predict_disc_class_ocr(crop)
+        ocr_total += perf_counter() - ocr_started
         detected_code = str(label_prediction.get("code", "UNKNOWN")).upper()
         label_confidence = float(label_prediction.get("confidence", 0.0))
         label_candidates = [candidate.upper() for candidate in label_prediction.get("candidates", [])]
@@ -164,7 +192,9 @@ def hybrid_analysis_pipeline(
         elif review_required:
             status = "review_required"
 
+        overlay_started = perf_counter()
         overlay_image = _build_disc_overlay(image, disc, auto_diameter_px, detected_code if detected_code != "UNKNOWN" else f"D{index}")
+        overlay_total += perf_counter() - overlay_started
         results.append(
             DiscMeasurement(
                 disc_id=f"disc-{index}",
@@ -201,14 +231,38 @@ def hybrid_analysis_pipeline(
                 overlay_image_base64=_encode_png_base64(overlay_image),
             )
         )
+        if progress_callback:
+            progress_callback(
+                0.45 + ((index / float(total_discs)) * 0.4),
+                "disc_analysis",
+                f"Processed disc {index} of {total_discs}.",
+                timings.copy(),
+            )
 
     results = sorted(results, key=lambda result: (result.center.y, result.center.x))
     for index, result in enumerate(results, start=1):
         result.index = index
         result.disc_id = f"disc-{index}"
 
+    timings["measurement_seconds"] = measurement_total
+    timings["ocr_seconds"] = ocr_total
+    timings["overlay_build_seconds"] = overlay_total
+
+    started = perf_counter()
     apply_standard_panel_resolution(results, image.shape)
+    timings["panel_resolution_seconds"] = perf_counter() - started
+
     summary = _summarize(results)
+
+    if progress_callback:
+        progress_callback(
+            0.92,
+            "result_serialization",
+            "Finalizing analysis result.",
+            timings.copy(),
+        )
+
+    started = perf_counter()
     plate_overlay = _build_plate_overlay(image, results)
     debug_artifacts: Dict[str, object] = {}
     if include_debug_artifacts:
@@ -220,6 +274,7 @@ def hybrid_analysis_pipeline(
                 "mm_per_pixel": calibration.mm_per_pixel,
             },
         }
+    timings["result_serialization_seconds"] = perf_counter() - started
 
     status = "REQUIRES_MANUAL_REVIEW" if summary.review_required_count or summary.failed_count else "VALID"
     return AnalysisResponse(

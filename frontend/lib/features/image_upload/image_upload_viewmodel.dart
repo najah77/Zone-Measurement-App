@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+
+import '../../core/platform/platform_capabilities.dart';
 import '../../routes/app_routes.dart';
 
 class ImageUploadViewModel extends ChangeNotifier {
@@ -11,6 +13,9 @@ class ImageUploadViewModel extends ChangeNotifier {
   bool get isLoading => _isLoading;
 
   Future<String?> pickFromCamera() async {
+    if (!PlatformCapabilities.supportsCameraCapture) {
+      return PlatformCapabilities.cameraUnavailableMessage;
+    }
     return await _pickImage(ImageSource.camera);
   }
 
@@ -31,9 +36,11 @@ class ImageUploadViewModel extends ChangeNotifier {
     } catch (e) {
       debugPrint('Error picking image: $e');
       if (e.toString().contains('cameraDelegate')) {
-        return 'Camera not supported on this device/platform.';
+        return PlatformCapabilities.cameraUnavailableMessage;
       }
-      return 'Failed to pick image.';
+      return source == ImageSource.camera
+          ? 'Unable to open the camera on this device. Use file upload instead.'
+          : 'Failed to pick image.';
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -47,13 +54,13 @@ class ImageUploadViewModel extends ChangeNotifier {
 
   void proceedToAnalysis(BuildContext context) {
     if (_selectedImage == null) return;
-    
+
     // API Call happens in AnalysisViewModel
     if (context.mounted) {
       Navigator.pushNamed(
-        context, 
+        context,
         AppRoutes.analysis,
-        arguments: _selectedImage?.path,
+        arguments: _selectedImage,
       );
     }
   }

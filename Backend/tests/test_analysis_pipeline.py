@@ -2,8 +2,11 @@ from __future__ import annotations
 
 import asyncio
 import json
+import shutil
 import sys
+import time
 import unittest
+import uuid
 from functools import lru_cache
 from pathlib import Path
 
@@ -20,7 +23,10 @@ if str(TESTS_DIR) not in sys.path:
 
 from app.main import app
 from app.ml.ocr_classifier import predict_disc_class_ocr
+from app.core.config import settings
 from app.models.schemas import DiscMeasurement, Point
+from app.services.analysis_jobs import recover_interrupted_analysis_jobs
+from app.services.analysis_store import initialize_analysis_job, load_analysis_job_status, update_analysis_job_status
 from app.services.ast_processor import process_ast_image
 from app.services.expert_engine import validate_results
 from app.utils.calibration import build_calibration, pixels_to_mm
@@ -202,7 +208,7 @@ class ApiIntegrationTests(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.client = TestClient(app)
 
-    def _analyze_fixture(self):
+    def _submit_fixture(self):
         image = make_plate_image(
             [
                 DiscSpec(center=(250, 280), zone_radius_px=70),
@@ -215,19 +221,50 @@ class ApiIntegrationTests(unittest.TestCase):
             files={"image": ("synthetic.png", encode_png(image), "image/png")},
             data={"include_debug_artifacts": "true"},
         )
-        self.assertEqual(response.status_code, 200, msg=response.text)
+        self.assertEqual(response.status_code, 202, msg=response.text)
         return response.json()
 
-    def test_analyze_endpoint_returns_reviewable_session(self) -> None:
-        payload = self._analyze_fixture()
+    def _wait_for_completion(self, analysis_id: str, timeout_seconds: float = 180.0):
+        deadline = time.monotonic() + timeout_seconds
+        last_payload = None
+        while time.monotonic() < deadline:
+            response = self.client.get(f"/api/analyze/{analysis_id}/status")
+            self.assertEqual(response.status_code, 200, msg=response.text)
+            payload = response.json()
+            last_payload = payload
+            if payload["status"] == "completed":
+                return payload
+            if payload["status"] == "failed":
+                self.fail(f"Analysis job {analysis_id} failed: {payload}")
+            time.sleep(0.25)
+        self.fail(f"Analysis job {analysis_id} did not complete in time. Last status: {last_payload}")
+
+    def test_analyze_endpoint_returns_job_submission_then_result(self) -> None:
+        payload = self._submit_fixture()
         self.assertIn("analysis_id", payload)
-        self.assertEqual(len(payload["results"]), 3)
-        self.assertIn("plate_overlay_base64", payload["debug_artifacts"])
+        self.assertEqual(payload["status"], "queued")
+        self.assertIn("/api/analyze/", payload["status_url"])
+        self.assertIn("/api/analyze/", payload["result_url"])
+
+        immediate_result = self.client.get(f"/api/analyze/{payload['analysis_id']}/result")
+        self.assertEqual(immediate_result.status_code, 409, msg=immediate_result.text)
+
+        status_payload = self._wait_for_completion(payload["analysis_id"])
+        self.assertEqual(status_payload["status"], "completed")
+        self.assertTrue(status_payload["result_available"])
+
+        result_response = self.client.get(f"/api/analyze/{payload['analysis_id']}/result")
+        self.assertEqual(result_response.status_code, 200, msg=result_response.text)
+        result_payload = result_response.json()
+        self.assertEqual(len(result_payload["results"]), 3)
+        self.assertIn("plate_overlay_base64", result_payload["debug_artifacts"])
 
     def test_review_endpoint_persists_manual_corrections(self) -> None:
-        payload = self._analyze_fixture()
+        payload = self._submit_fixture()
         analysis_id = payload["analysis_id"]
-        first_disc = payload["results"][0]
+        self._wait_for_completion(analysis_id)
+        result_payload = self.client.get(f"/api/analyze/{analysis_id}/result").json()
+        first_disc = result_payload["results"][0]
         review_response = self.client.post(
             f"/api/analysis/{analysis_id}/review",
             json={
@@ -251,11 +288,49 @@ class ApiIntegrationTests(unittest.TestCase):
         self.assertEqual(updated_disc["status"], "corrected")
 
     def test_export_endpoint_returns_table_columns(self) -> None:
-        payload = self._analyze_fixture()
+        payload = self._submit_fixture()
         analysis_id = payload["analysis_id"]
+        self._wait_for_completion(analysis_id)
         export_response = self.client.get(f"/api/analysis/{analysis_id}/export")
         self.assertEqual(export_response.status_code, 200)
         self.assertIn("disc_id,code,auto_mm,corrected_mm,final_mm", export_response.text)
+
+    def test_analyze_endpoint_rejects_empty_upload_before_queuing_job(self) -> None:
+        response = self.client.post(
+            "/api/analyze",
+            files={"image": ("empty.png", b"", "image/png")},
+        )
+        self.assertEqual(response.status_code, 400, msg=response.text)
+        self.assertIn("Uploaded image is empty.", response.text)
+
+
+class JobLifecycleTests(unittest.TestCase):
+    def test_startup_recovery_marks_interrupted_job_failed(self) -> None:
+        analysis_id = str(uuid.uuid4())
+        analysis_dir = settings.STORAGE_ROOT / analysis_id
+        try:
+            initialize_analysis_job(
+                analysis_id,
+                image_bytes=b"placeholder",
+                image_filename="interrupted.png",
+            )
+            update_analysis_job_status(
+                analysis_id,
+                status="processing",
+                current_stage="ocr",
+                message="Processing before simulated restart.",
+                progress=0.5,
+            )
+
+            recovered = recover_interrupted_analysis_jobs()
+            self.assertGreaterEqual(recovered, 1)
+
+            status = load_analysis_job_status(analysis_id)
+            self.assertEqual(status.status, "failed")
+            self.assertEqual(status.current_stage, "interrupted")
+            self.assertIn("Please retry the upload", status.message)
+        finally:
+            shutil.rmtree(analysis_dir, ignore_errors=True)
 
 
 class RegressionFixtureTests(unittest.TestCase):

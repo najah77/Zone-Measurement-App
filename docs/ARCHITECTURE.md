@@ -7,23 +7,22 @@ The application is split into a Flutter frontend and a FastAPI backend. The fron
 flowchart LR
     A["Operator"] --> B["Flutter app"]
     B --> C["POST /api/analyze"]
-    C --> D["FastAPI analyze router"]
-    D --> E["AST processor"]
-    E --> F["Plate extraction"]
-    E --> G["Quality validation"]
-    E --> H["Hybrid analysis pipeline"]
-    H --> I["Disc detection"]
-    H --> J["OCR + whitelist matching"]
-    H --> K["Zone measurement"]
-    H --> L["Calibration (6 mm rule)"]
-    H --> M["Validation summary"]
-    M --> N["analysis.json + original_upload.bin"]
-    N --> O["GET /analysis/{analysis_id}"]
-    N --> P["POST /analysis/{analysis_id}/review"]
-    N --> Q["GET /analysis/{analysis_id}/export"]
-    P --> B
+    C --> D["FastAPI submit endpoint"]
+    D --> E["status.json + original_upload.bin"]
+    E --> F["Background analysis job"]
+    F --> G["AST processor"]
+    G --> H["Plate extraction"]
+    G --> I["Quality validation"]
+    G --> J["Hybrid analysis pipeline"]
+    B --> K["GET /api/analyze/{analysis_id}/status"]
+    B --> L["GET /api/analyze/{analysis_id}/result"]
+    J --> M["analysis.json + result.json + error.json"]
+    M --> N["GET /api/analysis/{analysis_id}"]
+    M --> O["POST /api/analysis/{analysis_id}/review"]
+    M --> P["GET /api/analysis/{analysis_id}/export"]
     O --> B
-    Q --> R["CSV export"]
+    N --> B
+    P --> Q["CSV export"]
 ```
 
 ## Repository Layout
@@ -83,12 +82,13 @@ The Flutter app is an operator workflow client built around simple view models a
 - All API routes are mounted under `/api`.
 
 ### Runtime Flow
-1. `POST /api/analyze` checks the uploaded content type.
-2. `process_ast_image` enforces non-empty upload and `MAX_UPLOAD_BYTES`.
-3. `load_image_from_bytes` decodes the image.
-4. `extract_plate` detects and crops the plate area.
-5. `validate_image_quality` records blur, brightness, contrast, glare, and clipped-plate warnings.
-6. `hybrid_analysis_pipeline` performs:
+1. `POST /api/analyze` checks the uploaded content type, saves the upload, creates `status.json`, and returns an `analysis_id` immediately.
+2. A background job picks up the saved upload and updates `status.json` as it progresses.
+3. `run_ast_analysis` enforces non-empty upload and `MAX_UPLOAD_BYTES`.
+4. `load_image_from_bytes` decodes the image.
+5. `extract_plate` detects and crops the plate area.
+6. `validate_image_quality` records blur, brightness, contrast, glare, and clipped-plate warnings.
+7. `hybrid_analysis_pipeline` performs:
    - disc detection
    - disc-radius refinement
    - 6 mm calibration
@@ -97,8 +97,9 @@ The Flutter app is an operator workflow client built around simple view models a
    - zone measurement
    - result confidence and status assembly
    - optional overlay generation
-7. `validate_results` marks the session `VALID` or `REQUIRES_MANUAL_REVIEW`.
-8. `save_analysis_record` stores the original upload plus the persisted JSON session.
+8. `save_analysis_record` writes `analysis.json`, `result.json`, and the final completed status.
+9. The Flutter client polls `GET /api/analyze/{analysis_id}/status` until the job is complete, then fetches `GET /api/analyze/{analysis_id}/result`.
+10. On backend startup, any leftover `queued` or `processing` job is marked as `failed` with an interrupted-job message so clients never poll forever after a service restart.
 
 ## Image Analysis Pipeline
 
@@ -150,10 +151,19 @@ Each `analysis_id` gets its own directory under `Backend/data/analysis_runs/<ana
 ## Persistence Model
 Each analysis directory stores:
 - `original_upload.bin`: the raw uploaded image bytes
+- `status.json`: async job state, progress, stage, and timings
+- `result.json`: final `AnalysisResponse`
+- `error.json`: failure details when a job crashes or validation fails
 - `analysis.json`: the persisted analysis session, including auto values and any reviewed values
 - optional debug images such as `plate_overlay.png`
 
 Review updates do not destroy the automatic measurements. They add corrected values and update `final_code`, `final_diameter_mm`, `status`, `source`, and review metadata inside the same persisted analysis record.
+
+## Async Job Guarantees
+- `POST /api/analyze` performs upload validation, persists the image, and returns immediately with `202 Accepted`.
+- Status polling is read-only. It never re-runs OCR or measurement.
+- The backend only writes `result.json` and marks a job `completed` after the final payload has been fully serialized.
+- If the backend process restarts mid-analysis, the next startup converts those orphaned jobs into `failed` status with a retry message instead of leaving them stuck in `queued` or `processing`.
 
 ## Active Runtime Dependencies vs Optional Modules
 The current production path uses FastAPI, OpenCV, NumPy, and Tesseract OCR directly.

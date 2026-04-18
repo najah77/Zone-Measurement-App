@@ -60,4 +60,38 @@ void main() {
     expect(session.requiresReview, isTrue);
     expect(session.debugArtifacts['plate_overlay_base64'], 'abc123');
   });
+
+  test('Analysis job submission and status models parse async payloads', () {
+    final submission = AnalysisSubmissionModel.fromJson({
+      'analysis_id': 'job-123',
+      'status': 'queued',
+      'created_at': '2026-04-18T10:00:00Z',
+      'message': 'Upload received. Analysis job queued.',
+      'status_url': '/api/analyze/job-123/status',
+      'result_url': '/api/analyze/job-123/result',
+    });
+
+    final status = AnalysisJobStatusModel.fromJson({
+      'analysis_id': 'job-123',
+      'status': 'processing',
+      'created_at': '2026-04-18T10:00:00Z',
+      'updated_at': '2026-04-18T10:00:15Z',
+      'message': 'Processed disc 2 of 5.',
+      'progress': 0.61,
+      'current_stage': 'disc_analysis',
+      'result_available': false,
+      'timings': {'disc_detection_seconds': 1.2},
+      'status_url': '/api/analyze/job-123/status',
+      'result_url': '/api/analyze/job-123/result',
+    });
+
+    expect(submission.analysisId, 'job-123');
+    expect(submission.status, 'queued');
+    expect(status.analysisId, 'job-123');
+    expect(status.status, 'processing');
+    expect(status.progress, closeTo(0.61, 0.001));
+    expect(status.currentStage, 'disc_analysis');
+    expect(status.timings['disc_detection_seconds'], closeTo(1.2, 0.001));
+    expect(status.isTerminal, isFalse);
+  });
 }
