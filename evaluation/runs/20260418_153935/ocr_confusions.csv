@@ -1,0 +1,14 @@
+image_id,predicted_code,likely_expected_code,raw_ocr_text,normalized_ocr_text,candidates
+1.1.1,DO,CRO,DO,DO,DO | DOR | CAZ | P | MEM
+1.1.1,P,AMC,P,P,P | CTX | PIP | LEV | POL
+1.1.1,P,CPD,P,P,P | CTX | PIP | LEV | POL
+1.1.1,P,MEM,P,P,P | CTX | PIP | LEV | POL
+1.1.1,P,F100,P,P,P | CTX | PIP | LEV | POL
+1.10.1,P,CN,O | P | 4,O,P | AK | DO | TE | VA
+1.10.1,P,CIP,O | P | 4,O,P | AK | DO | TE | VA
+1.10.1,P,FOX,O | P | 4,O,P | AK | DO | TE | VA
+1.10.1,P,TOB,O | P | 4,O,P | AK | DO | TE | VA
+1.10.1,P,TPZ,O | P | 4,O,P | AK | DO | TE | VA
+1.2.1,AM,CIP,AM | 10,AM 10,AM | P | AMP | DO | VA
+1.2.1,COL,CPD,CO,CO,COL | CRO | PEF | CAZ | VA
+1.2.1,VA,F100,I | 4 VA,I,VA | CIP | RIF | PIP | P

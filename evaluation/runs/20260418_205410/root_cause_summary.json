@@ -1,0 +1,7 @@
+{
+  "incorrect_no_zone_fallback": 2,
+  "zone_measurement_error": 2,
+  "zone_selection_underestimate": 2,
+  "image_quality_or_thresholding_issue": 1,
+  "ocr_wrong_code": 1
+}

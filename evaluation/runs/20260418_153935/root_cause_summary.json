@@ -1,0 +1,6 @@
+{
+  "ocr_wrong_code": 3,
+  "zone_measurement_error": 3,
+  "image_quality_or_thresholding_issue": 1,
+  "zone_selection_underestimate": 2
+}

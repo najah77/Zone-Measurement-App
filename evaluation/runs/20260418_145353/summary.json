@@ -1,0 +1,19 @@
+{
+  "generated_at": "2026-04-18T11:54:46.755811+00:00",
+  "evaluated_image_count": 1,
+  "images_with_ground_truth": 1,
+  "source_counts": {
+    "dryad_sirscan": 1
+  },
+  "full_pass_count": 0,
+  "strict_fail_count": 1,
+  "analysis_status_breakdown": {
+    "REQUIRES_MANUAL_REVIEW": 1
+  },
+  "measurement_mae_mm": 11.6,
+  "measurement_max_abs_error_mm": 20.21,
+  "root_causes": {
+    "ocr_wrong_code": 1,
+    "zone_measurement_error": 1
+  }
+}

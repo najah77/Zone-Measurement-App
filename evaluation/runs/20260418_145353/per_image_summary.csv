@@ -1,0 +1,2 @@
+image_id,source_group,provenance,analysis_status,predicted_disc_count,expected_disc_count,count_matches_ground_truth,matched_disc_count,measurement_mae_mm,measurement_max_abs_error_mm,missing_codes,unexpected_codes,review_required_count,failed_count,strict_failed,full_pass,root_causes,warnings
+1.1.1,dryad_sirscan,dryad_original,REQUIRES_MANUAL_REVIEW,16,16,True,12,11.6,20.21,CIP | CPD | CRO | F100,CFM | CN | OFX | P,13,0,True,False,ocr_wrong_code | zone_measurement_error,

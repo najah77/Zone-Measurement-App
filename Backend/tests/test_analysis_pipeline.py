@@ -29,15 +29,20 @@ from app.services.analysis_jobs import recover_interrupted_analysis_jobs
 from app.services.analysis_store import initialize_analysis_job, load_analysis_job_status, update_analysis_job_status
 from app.services.ast_processor import process_ast_image
 from app.services.expert_engine import validate_results
+from app.services.panel_resolver import apply_standard_panel_resolution
 from app.utils.calibration import build_calibration, pixels_to_mm
 from app.utils.disc_detector import detect_discs
 from app.utils.disc_detector import validate_disc_geometry
 from app.utils.disc_roi import extract_disc_roi
+from app.utils.plate_extractor import extract_plate
 from app.utils.measurement import apply_no_zone_rule, calculate_inhibition_result
 from app.utils.zone_detector import measure_zone
 from synthetic_plate import DiscSpec, encode_png, make_label_crop, make_plate_image
 
 REAL_SAMPLE_PATH = ROOT / "data" / "analysis_runs" / "03315fd2-d572-4120-9813-57e6919fcada" / "original_upload.bin"
+DRYAD_ROOT = ROOT.parent / "Test_Images" / "dryad_sirscan" / "images_original"
+DRYAD_1_1_1_PATH = DRYAD_ROOT / "1.1.1. original.jpg"
+DRYAD_1_10_1_PATH = DRYAD_ROOT / "1.10.1. original.jpg"
 
 
 def _resolve_real_sample_path(preferred_filenames: set[str], fallback: Path) -> Path:
@@ -110,6 +115,27 @@ def _load_latest_sample_fox_crop() -> np.ndarray:
     )
 
 
+def _load_dryad_disc_crop(image_path: Path, disc_index: int, *, expand_ratio: float, mask_scale: float) -> np.ndarray:
+    image = cv2.imread(str(image_path))
+    if image is None:
+        raise RuntimeError(f"Fixture {image_path} could not be decoded.")
+
+    plate_image, plate_detection = extract_plate(image)
+    discs = detect_discs(plate_image, plate_detection=plate_detection)
+    if disc_index >= len(discs):
+        raise RuntimeError(f"Disc index {disc_index} is out of range for {image_path.name}.")
+
+    x, y, radius = discs[disc_index]
+    return extract_disc_roi(
+        plate_image,
+        float(x),
+        float(y),
+        float(radius),
+        expand_ratio=expand_ratio,
+        mask_scale=mask_scale,
+    )
+
+
 class GeometryAndNormalizationTests(unittest.TestCase):
     def test_pixels_to_mm_uses_disc_reference(self) -> None:
         calibration = build_calibration([(0.0, 0.0, 20.0), (10.0, 10.0, 21.0), (20.0, 20.0, 19.0)])
@@ -163,6 +189,14 @@ class GeometryAndNormalizationTests(unittest.TestCase):
         self.assertEqual(first["confidence_tier"], second["confidence_tier"])
         self.assertEqual(first["candidates"][:3], second["candidates"][:3])
 
+    @unittest.skipUnless(DRYAD_1_1_1_PATH.exists(), "Dryad OCR regression fixture is not available in this workspace.")
+    def test_relaxed_fallback_crop_recovers_cip_from_dryad_disc(self) -> None:
+        primary_crop = _load_dryad_disc_crop(DRYAD_1_1_1_PATH, 13, expand_ratio=0.24, mask_scale=0.82)
+        relaxed_crop = _load_dryad_disc_crop(DRYAD_1_1_1_PATH, 13, expand_ratio=0.30, mask_scale=0.98)
+        prediction = predict_disc_class_ocr(primary_crop, fallback_images=[relaxed_crop])
+        self.assertEqual(prediction["code"], "CIP")
+        self.assertIn(prediction["confidence_tier"], {"high_confidence_exact", "probable_match"})
+
     def test_validation_logic_requires_manual_review(self) -> None:
         validation = validate_results(
             [
@@ -201,6 +235,122 @@ class ZoneMeasurementTests(unittest.TestCase):
         result = measure_zone(image, (250.0, 280.0, 22.0))
         self.assertTrue(result["no_zone_fallback_used"])
         self.assertAlmostEqual(result["diameter_px"], 44.0, delta=4.0)
+
+
+class DenseLayoutDetectionTests(unittest.TestCase):
+    @unittest.skipUnless(DRYAD_1_10_1_PATH.exists(), "Dryad scanner fixture is not available in this workspace.")
+    def test_dense_layout_detector_recovers_all_sixteen_discs(self) -> None:
+        image = cv2.imread(str(DRYAD_1_10_1_PATH))
+        self.assertIsNotNone(image)
+        plate_image, plate_detection = extract_plate(image)
+        discs = detect_discs(plate_image, plate_detection=plate_detection)
+        self.assertEqual(len(discs), 16)
+
+    def _make_dense_disc(
+        self,
+        index: int,
+        center: tuple[float, float],
+        detected_code: str,
+        *,
+        candidates: list[str] | None = None,
+        tier: str = "high_confidence_exact",
+        auto_mm: float | None = None,
+    ) -> DiscMeasurement:
+        final_code = detected_code if detected_code != "AM" else "AM"
+        return DiscMeasurement(
+            disc_id=f"disc-{index}",
+            index=index,
+            center=Point(x=center[0], y=center[1]),
+            disc_radius_px=26.0,
+            disc_diameter_px=52.0,
+            detected_code=detected_code,
+            final_code=final_code,
+            label_confidence=0.99 if tier == "high_confidence_exact" else 0.84,
+            label_confidence_tier=tier,
+            label_candidates=candidates or [detected_code],
+            whitelist_candidates_considered=candidates or [detected_code],
+            auto_diameter_px=220.0,
+            auto_diameter_mm=auto_mm if auto_mm is not None else float(40 - index),
+            final_diameter_mm=auto_mm if auto_mm is not None else float(40 - index),
+            measurement_confidence=0.84,
+            overall_confidence=0.84,
+            status="auto",
+            review_required=False,
+        )
+
+    def test_dense_panel_resolution_prefers_tob_variant_without_measurement_rank_bias(self) -> None:
+        centers = [
+            (100.0, 120.0), (350.0, 120.0), (600.0, 120.0), (850.0, 120.0),
+            (100.0, 370.0), (350.0, 370.0), (600.0, 370.0), (850.0, 370.0),
+            (100.0, 620.0), (350.0, 620.0), (600.0, 620.0), (850.0, 620.0),
+            (100.0, 870.0), (350.0, 870.0), (600.0, 870.0), (850.0, 870.0),
+        ]
+        detections = [
+            ("AM", ["AM10", "AM", "CN"]),
+            ("FEP", ["FEP", "FOX"]),
+            ("FOX", ["FOX", "DO"]),
+            ("MEM", ["MEM", "GEN"]),
+            ("CPD", ["CPD", "CN"]),
+            ("AMC", ["AMC", "AMK"]),
+            ("CRO", ["CRO", "COL"]),
+            ("P", ["P", "TPZ", "CLI"]),
+            ("CAZ", ["CAZ", "COL"]),
+            ("AK", ["AK", "AMK", "FF"]),
+            ("P", ["P", "TOB", "TOP", "AK"]),
+            ("CN", ["CN", "TOP", "DO"]),
+            ("ETP", ["ETP", "VA"]),
+            ("CIP", ["CIP", "TOP", "OFX"]),
+            ("PEF", ["PEF", "LEV"]),
+            ("SXT", ["SXT", "STR"]),
+        ]
+        results = [
+            self._make_dense_disc(index + 1, center, code, candidates=candidates, auto_mm=(55.0 if index == 9 else 20.0 - index))
+            for index, (center, (code, candidates)) in enumerate(zip(centers, detections))
+        ]
+
+        apply_standard_panel_resolution(results, (1024, 1024, 3))
+        ordered_codes = [item.final_code for item in sorted(results, key=lambda item: (item.center.y, item.center.x))]
+        self.assertEqual(
+            ordered_codes,
+            ["AM10", "FEP", "FOX", "MEM", "CPD", "AMC", "CRO", "TPZ", "CAZ", "AK", "TOB", "CN", "ETP", "CIP", "PEF", "SXT"],
+        )
+
+    def test_dense_panel_consistency_recovers_missing_ipm_and_caz(self) -> None:
+        centers = [
+            (100.0, 120.0), (350.0, 120.0), (600.0, 120.0), (850.0, 120.0),
+            (100.0, 370.0), (350.0, 370.0), (600.0, 370.0), (850.0, 370.0),
+            (100.0, 620.0), (350.0, 620.0), (600.0, 620.0), (850.0, 620.0),
+            (100.0, 870.0), (350.0, 870.0), (600.0, 870.0), (850.0, 870.0),
+        ]
+        detections = [
+            ("AMC", ["AMC", "AM"]),
+            ("FEP", ["FEP", "FOX"]),
+            ("TGC", ["TGC", "TIO"]),
+            ("CN", ["CN", "IPM", "P"]),
+            ("FF", ["FF", "CAZ", "CN"]),
+            ("TPZ", ["TPZ", "P"]),
+            ("SAM", ["SAM", "AM"]),
+            ("MEM", ["MEM", "IPM"]),
+            ("ATM", ["ATM", "LEV"]),
+            ("CIP", ["CIP", "P"]),
+            ("LEV", ["LEV", "P"]),
+            ("MIN", ["MIN", "MNO"]),
+            ("TOB", ["TOB", "TOP"]),
+            ("AK", ["AK", "AMK"]),
+            ("SXT", ["SXT", "CN"]),
+            ("CN", ["CN", "IPM"]),
+        ]
+        results = [
+            self._make_dense_disc(index + 1, center, code, candidates=candidates, auto_mm=30.0 - index)
+            for index, (center, (code, candidates)) in enumerate(zip(centers, detections))
+        ]
+
+        apply_standard_panel_resolution(results, (1024, 1024, 3))
+        ordered_codes = [item.final_code for item in sorted(results, key=lambda item: (item.center.y, item.center.x))]
+        self.assertEqual(ordered_codes[3], "IPM")
+        self.assertEqual(ordered_codes[4], "CAZ")
+        self.assertEqual(ordered_codes[5], "TPZ")
+        self.assertEqual(ordered_codes[12], "TOB")
 
 
 class ApiIntegrationTests(unittest.TestCase):

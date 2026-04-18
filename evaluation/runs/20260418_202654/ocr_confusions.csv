@@ -1,0 +1,3 @@
+image_id,predicted_code,likely_expected_code,raw_ocr_text,normalized_ocr_text,candidates
+1.7.1,VA,ETP,VA,VA,AM10 | VA | TPZ | AM | AK
+1.8.1,SXT,TOB,SXT | S,SXT,CN | SXT | TOB | STR | IPM

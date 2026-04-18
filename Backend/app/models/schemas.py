@@ -11,9 +11,18 @@ class Point(BaseModel):
     y: float
 
 
+class BoundingBox(BaseModel):
+    x1: float
+    y1: float
+    x2: float
+    y2: float
+
+
 class PlateDetection(BaseModel):
     center: Point
     radius_px: float
+    shape: str = "circle"
+    bounding_box: Optional[BoundingBox] = None
     clipped: bool = False
     clip_fraction: float = 0.0
     method: str = "contour"

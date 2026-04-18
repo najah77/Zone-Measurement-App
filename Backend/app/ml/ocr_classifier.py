@@ -9,14 +9,17 @@ import numpy as np
 import pytesseract
 
 from app.core.config import settings
+from app.utils.preprocessing import apply_clahe
 
 ANTIBIOTIC_CODEBOOK: Dict[str, Dict[str, object]] = {
     "P": {"strengths": {10}},
     "AMP": {"strengths": {10}},
     "AM": {"strengths": {10}},
+    "AM10": {"strengths": {10}},
     "AMC": {"strengths": {30}},
     "SAM": {"strengths": {20}},
     "TZP": {"strengths": {110}},
+    "TPZ": {"strengths": {36, 110}},
     "PIP": {"strengths": {100}},
     "CAZ": {"strengths": {30}},
     "CTX": {"strengths": {30}},
@@ -26,6 +29,7 @@ ANTIBIOTIC_CODEBOOK: Dict[str, Dict[str, object]] = {
     "CPD": {"strengths": {10}},
     "CFX": {"strengths": {30}},
     "FOX": {"strengths": {30}},
+    "FEP": {"strengths": {30}},
     "ATM": {"strengths": {30}},
     "IPM": {"strengths": {10}},
     "MEM": {"strengths": {10}},
@@ -36,10 +40,12 @@ ANTIBIOTIC_CODEBOOK: Dict[str, Dict[str, object]] = {
     "AMK": {"strengths": {30}},
     "AK": {"strengths": {30}},
     "TOB": {"strengths": {10}},
+    "TOP": {"strengths": {10}},
     "KAN": {"strengths": {30}},
     "STR": {"strengths": {10}},
     "NET": {"strengths": {30}},
     "CIP": {"strengths": {5}},
+    "PEF": {"strengths": {5}},
     "NOR": {"strengths": {10}},
     "LEV": {"strengths": {5}},
     "OFX": {"strengths": {5}},
@@ -49,6 +55,7 @@ ANTIBIOTIC_CODEBOOK: Dict[str, Dict[str, object]] = {
     "TE": {"strengths": {30}},
     "DO": {"strengths": {30}},
     "TGC": {"strengths": {15}},
+    "MIN": {"strengths": {30}},
     "ERY": {"strengths": {15}},
     "AZM": {"strengths": {15}},
     "CLR": {"strengths": {15}},
@@ -61,21 +68,22 @@ ANTIBIOTIC_CODEBOOK: Dict[str, Dict[str, object]] = {
     "LZD": {"strengths": {30}},
     "RIF": {"strengths": {5}},
     "FOS": {"strengths": {50, 200}},
+    "FF": {"strengths": {200}},
     "MUP": {"strengths": {5, 200}},
     "COL": {"strengths": {10}},
     "POL": {"strengths": {300}},
     "NIT": {"strengths": {300}},
     "FUR": {"strengths": {100}},
+    "F100": {"strengths": {100}},
 }
 
 DIRECT_ALIAS_MAP = {
     "GN": "CN",
-    "GEN": "CN",
     "IE": "TE",
     "SAN": "SAM",
     "AN": "AM",
-    "AK": "AMK",
     "CIF": "CIP",
+    "TOP": "TOB",
 }
 
 VALID_STRENGTHS = {2, 5, 10, 15, 20, 25, 30, 50, 100, 110, 200, 300}
@@ -83,16 +91,24 @@ PSM_CONFIGS: Sequence[Tuple[int, str]] = (
     (6, "--psm 6 --oem 3 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"),
     (11, "--psm 11 --oem 3 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"),
 )
+POLAR_PSM_CONFIG: Tuple[int, str] = (
+    7,
+    "--psm 7 --oem 3 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
+)
 VARIANT_WEIGHTS = {
     "sharpened": 1.0,
     "blackhat": 1.08,
     "inv_otsu": 1.04,
     "dilate": 1.02,
     "adaptive": 0.98,
+    "polar_strip": 1.1,
+    "polar_blackhat": 1.14,
 }
 PSM_WEIGHTS = {6: 1.0, 11: 0.97}
 ANGLE_OFFSETS = (-12, 0, 12)
 FALLBACK_ANGLES = (0, 45, 90, 135, 180, 225, 270, 315)
+PRIMARY_VARIANTS = ("blackhat", "inv_otsu")
+SECONDARY_VARIANTS = ("adaptive", "sharpened")
 OCR_CHAR_TRANSLATION = str.maketrans(
     {
         "0": "O",
@@ -211,6 +227,41 @@ def _build_variants(roi_image: np.ndarray) -> Dict[str, np.ndarray]:
     }
 
 
+def _build_polar_variants(roi_image: np.ndarray) -> Dict[str, np.ndarray]:
+    crop = _tighten_disc_crop(roi_image)
+    height, width = crop.shape[:2]
+    center = (width / 2.0, height / 2.0)
+    max_radius = max(8.0, min(height, width) / 2.0 - 2.0)
+    polar = cv2.warpPolar(
+        crop,
+        (int(round(max_radius)), 360),
+        center,
+        max_radius,
+        cv2.WARP_POLAR_LINEAR,
+    )
+    inner_radius = int(round(max_radius * 0.42))
+    outer_radius = int(round(max_radius * 0.96))
+    annulus = polar[:, inner_radius:outer_radius]
+    if annulus.size == 0:
+        return {}
+
+    strip = cv2.transpose(annulus)
+    strip = cv2.resize(strip, (720, 140), interpolation=cv2.INTER_CUBIC)
+    strip = apply_clahe(strip, clip_limit=2.6)
+    blackhat = cv2.morphologyEx(
+        strip,
+        cv2.MORPH_BLACKHAT,
+        cv2.getStructuringElement(cv2.MORPH_RECT, (31, 9)),
+    )
+    blackhat = cv2.normalize(blackhat, None, 0, 255, cv2.NORM_MINMAX)
+    _, thresholded = cv2.threshold(blackhat, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    strip_variants = {
+        "polar_strip": strip,
+        "polar_blackhat": cv2.bitwise_not(thresholded),
+    }
+    return strip_variants
+
+
 def _estimate_candidate_angles(blackhat: np.ndarray) -> List[int]:
     percentile = int(np.percentile(blackhat, 97))
     mask = cv2.inRange(blackhat, percentile, 255)
@@ -221,11 +272,22 @@ def _estimate_candidate_angles(blackhat: np.ndarray) -> List[int]:
 
     rect = cv2.minAreaRect(coords)
     base_angle = float(rect[-1]) % 360.0
-    angle_set = set()
+    prioritized: List[int] = []
+    seen = set()
+
+    def _push(angle_value: float) -> None:
+        normalized = int(round(angle_value % 360.0))
+        if normalized not in seen:
+            seen.add(normalized)
+            prioritized.append(normalized)
+
     for base in (base_angle, base_angle + 90.0, base_angle + 180.0, base_angle + 270.0):
-        for offset in ANGLE_OFFSETS:
-            angle_set.add(int(round((base + offset) % 360.0)))
-    return sorted(angle_set)
+        _push(base)
+    for base in (base_angle, base_angle + 180.0):
+        for offset in (-10.0, 10.0):
+            _push(base + offset)
+
+    return prioritized[:8] if prioritized else list(FALLBACK_ANGLES)
 
 
 def _extract_code_tokens(raw_text: str) -> List[str]:
@@ -235,14 +297,27 @@ def _extract_code_tokens(raw_text: str) -> List[str]:
     for token in tokens:
         if token.isdigit():
             continue
-        normalized = token.translate(OCR_CHAR_TRANSLATION)
-        normalized = re.sub(r"[^A-Z]", "", normalized)
-        if not normalized:
-            continue
-        normalized = normalized[:4]
-        if normalized not in seen:
-            seen.add(normalized)
-            code_tokens.append(normalized)
+        alpha_candidate = token.translate(OCR_CHAR_TRANSLATION)
+        alpha_candidate = re.sub(r"[^A-Z]", "", alpha_candidate)
+        if alpha_candidate:
+            alpha_candidate = alpha_candidate[:5]
+            if alpha_candidate not in seen:
+                seen.add(alpha_candidate)
+                code_tokens.append(alpha_candidate)
+
+        alnum_token = re.sub(r"[^A-Z0-9]", "", token.upper())
+        if alnum_token:
+            for split_index in range(1, min(5, len(alnum_token))):
+                prefix_text = alnum_token[:split_index]
+                suffix_text = alnum_token[split_index:]
+                letter_prefix = re.sub(r"[^A-Z]", "", prefix_text.translate(OCR_CHAR_TRANSLATION))
+                suffix_digits = suffix_text.translate(STRENGTH_CHAR_TRANSLATION)
+                suffix_digits = re.sub(r"[^0-9]", "", suffix_digits)
+                if letter_prefix and suffix_digits:
+                    alnum_candidate = f"{letter_prefix[:4]}{suffix_digits[:3]}"
+                    if alnum_candidate not in seen:
+                        seen.add(alnum_candidate)
+                        code_tokens.append(alnum_candidate)
     return code_tokens
 
 
@@ -270,6 +345,16 @@ def _is_confusable(left: str, right: str) -> bool:
     return any(left in group and right in group for group in CONFUSABLE_CHAR_GROUPS)
 
 
+def _is_ordered_subsequence(token: str, candidate: str) -> bool:
+    token_index = 0
+    candidate_index = 0
+    while token_index < len(token) and candidate_index < len(candidate):
+        if token[token_index] == candidate[candidate_index]:
+            token_index += 1
+        candidate_index += 1
+    return token_index == len(token)
+
+
 def _alignment_score(token: str, candidate: str) -> Tuple[float, str]:
     alias_target = DIRECT_ALIAS_MAP.get(token)
     if token == candidate:
@@ -278,6 +363,20 @@ def _alignment_score(token: str, candidate: str) -> Tuple[float, str]:
         return 0.95, "alias"
     if len(token) == 1 and len(candidate) > 1:
         return 0.0, "too_short"
+    if len(token) == 2 and len(candidate) == 3:
+        if token == candidate[:2]:
+            return 0.9, "prefix"
+        if token == candidate[1:]:
+            return 0.84, "suffix"
+        if token == (candidate[0] + candidate[2]):
+            return 0.88, "outer-pair"
+    if len(token) == 3 and len(candidate) == 4:
+        if token == candidate[:3]:
+            return 0.9, "prefix"
+        if token == candidate[1:]:
+            return 0.84, "suffix"
+        if token == (candidate[0] + candidate[2] + candidate[3]):
+            return 0.86, "skip-middle"
     if abs(len(token) - len(candidate)) > 1:
         return 0.0, "length_mismatch"
 
@@ -296,6 +395,10 @@ def _alignment_score(token: str, candidate: str) -> Tuple[float, str]:
     score = max(0.0, 1.0 - (penalty / float(max_len)))
     coverage = min(len(token), len(candidate)) / float(max_len)
     score *= 0.55 + (coverage * 0.45)
+    if _is_ordered_subsequence(token, candidate):
+        score += 0.08
+    elif len(token) >= 2:
+        score -= 0.12
     if len(token) == 2 and len(candidate) == 3 and token in {candidate[:2], candidate[1:]}:
         score += 0.08
     elif len(token) == 2 and len(candidate) == 3 and token == (candidate[0] + candidate[2]):
@@ -323,15 +426,34 @@ def _normalize_observation_text(tokens: Sequence[str], strengths: Sequence[int])
     return " ".join(parts).strip()
 
 
-def _ocr_observations(roi_image: np.ndarray) -> List[Dict[str, object]]:
-    variants = _build_variants(roi_image)
-    candidate_angles = _estimate_candidate_angles(variants["blackhat"])
-    observations: List[Dict[str, object]] = []
+def _is_rank_confident_enough(ranked: Sequence[Dict[str, object]]) -> bool:
+    if not ranked:
+        return False
+    top = ranked[0]
+    top_score = float(top.get("score", 0.0))
+    second_score = float(ranked[1]["score"]) if len(ranked) > 1 else 0.0
+    margin = top_score - second_score
+    return (
+        int(top.get("exact_matches", 0)) > 0
+        and (
+            top_score >= settings.OCR_HIGH_CONFIDENCE
+            or (top_score >= settings.OCR_MIN_CONFIDENCE and margin >= (settings.OCR_MIN_MARGIN * 0.6))
+        )
+    )
 
-    for variant_name, variant_image in variants.items():
-        for angle in candidate_angles:
+
+def _collect_ocr_pass(
+    observations: List[Dict[str, object]],
+    variants: Dict[str, np.ndarray],
+    variant_names: Sequence[str],
+    angles: Sequence[int],
+    psm_configs: Sequence[Tuple[int, str]],
+) -> None:
+    for variant_name in variant_names:
+        variant_image = variants[variant_name]
+        for angle in angles:
             rotated = _rotate_image(variant_image, angle)
-            for psm, config in PSM_CONFIGS:
+            for psm, config in psm_configs:
                 try:
                     raw_text = pytesseract.image_to_string(rotated, config=config)
                 except pytesseract.TesseractError:
@@ -356,6 +478,40 @@ def _ocr_observations(roi_image: np.ndarray) -> List[Dict[str, object]]:
                         "normalized_text": _normalize_observation_text(code_tokens, strengths),
                     }
                 )
+
+
+def _ocr_observations(roi_image: np.ndarray) -> List[Dict[str, object]]:
+    variants = _build_variants(roi_image)
+    candidate_angles = _estimate_candidate_angles(variants["blackhat"])
+    primary_angles = candidate_angles[:4] if candidate_angles else list(FALLBACK_ANGLES[:4])
+    fallback_angles = candidate_angles[4:] if len(candidate_angles) > 4 else list(FALLBACK_ANGLES[4:])
+    observations: List[Dict[str, object]] = []
+
+    _collect_ocr_pass(observations, variants, PRIMARY_VARIANTS, primary_angles, (PSM_CONFIGS[0],))
+    ranked = _score_candidates(observations)
+    if _is_rank_confident_enough(ranked):
+        return observations
+
+    _collect_ocr_pass(observations, variants, PRIMARY_VARIANTS, primary_angles, (PSM_CONFIGS[1],))
+    ranked = _score_candidates(observations)
+    if _is_rank_confident_enough(ranked):
+        return observations
+
+    polar_variants = _build_polar_variants(roi_image)
+    if polar_variants:
+        _collect_ocr_pass(
+            observations,
+            polar_variants,
+            tuple(polar_variants.keys()),
+            (0, 90, 180, 270),
+            (POLAR_PSM_CONFIG,),
+        )
+        ranked = _score_candidates(observations)
+        if _is_rank_confident_enough(ranked):
+            return observations
+
+    secondary_angles = primary_angles + fallback_angles[:4]
+    _collect_ocr_pass(observations, variants, SECONDARY_VARIANTS, secondary_angles, PSM_CONFIGS)
     return observations
 
 
@@ -449,6 +605,7 @@ def _score_candidates(observations: Sequence[Dict[str, object]]) -> List[Dict[st
                 "exact_matches": int(entry["exact_matches"]),
                 "strength_hits": int(entry["strength_hits"]),
                 "support_count": len(scores),
+                "best_strength_count": len(list((entry["best_observation"] or {}).get("strengths", []))),
                 "best_observation": entry["best_observation"],
             }
         )
@@ -457,6 +614,7 @@ def _score_candidates(observations: Sequence[Dict[str, object]]) -> List[Dict[st
         key=lambda item: (
             -float(item["score"]),
             -int(item["strength_hits"]),
+            -int(item.get("best_strength_count", 0)),
             -int(item["exact_matches"]),
             -int(item["support_count"]),
             -len(str(item["code"])),
@@ -499,7 +657,10 @@ def _score_candidates(observations: Sequence[Dict[str, object]]) -> List[Dict[st
     return ranked
 
 
-def predict_disc_class_ocr(roi_image: np.ndarray) -> Dict[str, object]:
+def predict_disc_class_ocr(
+    roi_image: np.ndarray,
+    fallback_images: Sequence[np.ndarray] | None = None,
+) -> Dict[str, object]:
     if roi_image is None or roi_image.size == 0:
         return {
             "code": "UNKNOWN",
@@ -515,6 +676,16 @@ def predict_disc_class_ocr(roi_image: np.ndarray) -> Dict[str, object]:
         }
 
     observations = _ocr_observations(roi_image)
+    ranked = _score_candidates(observations)
+    if fallback_images and not _is_rank_confident_enough(ranked):
+        for fallback_image in fallback_images:
+            if fallback_image is None or fallback_image.size == 0:
+                continue
+            observations.extend(_ocr_observations(fallback_image))
+            ranked = _score_candidates(observations)
+            if _is_rank_confident_enough(ranked):
+                break
+
     if not observations:
         return {
             "code": "UNKNOWN",
@@ -529,7 +700,6 @@ def predict_disc_class_ocr(roi_image: np.ndarray) -> Dict[str, object]:
             "engine": "hybrid-ocr-whitelist",
         }
 
-    ranked = _score_candidates(observations)
     unique_raw = []
     for observation in observations:
         raw_text = str(observation["raw_text"])
@@ -566,8 +736,11 @@ def predict_disc_class_ocr(roi_image: np.ndarray) -> Dict[str, object]:
     top_code = str(top["code"])
     top_score = float(top["score"])
     top_exact = int(top["exact_matches"]) > 0
+    top_support_count = int(top["support_count"])
+    top_strength_hits = int(top["strength_hits"])
     best_token = str(best_observation.get("token", ""))
     candidates = [str(item["code"]) for item in ranked[:6]]
+    single_letter_without_strength = len(top_code) == 1 and not strengths
 
     confidence_tier = "failed_unknown"
     detected_code = "UNKNOWN"
@@ -596,7 +769,56 @@ def predict_disc_class_ocr(roi_image: np.ndarray) -> Dict[str, object]:
                 "observed_strengths": strengths,
             }
 
-    if top_exact and top_score >= settings.OCR_HIGH_CONFIDENCE and (
+    if top_code == "P" and "CIP" in ranked_lookup:
+        cip_score = float(ranked_lookup["CIP"]["score"])
+        cip_observation = dict(ranked_lookup["CIP"].get("best_observation") or {})
+        cip_strengths = list(cip_observation.get("strengths", []))
+        if cip_score >= 0.85 and 5 in cip_strengths and not strengths:
+            confidence_tier = "probable_match"
+            detected_code = "CIP"
+            selection_reason = (
+                "OCR produced a noisy single-letter 'P', but a stronger whitelist-supported alternative matched 'CIP' with strength 5."
+            )
+            decision_source = "ocr+whitelist_correction"
+            top_code = "CIP"
+            top_score = cip_score
+            top_exact = int(ranked_lookup["CIP"]["exact_matches"]) > 0
+            best_observation = cip_observation
+            strengths = cip_strengths
+            candidates = [str(item["code"]) for item in ranked[:6]]
+
+    if len(top_code) == 1 and not strengths and top_support_count < 2:
+        confidence_tier = "uncertain_manual_confirmation_required"
+        selection_reason = (
+            f"OCR only produced the short single-letter token '{top_code}' once; manual confirmation is required."
+        )
+        decision_source = "ocr_suggestion_only"
+        return {
+            "code": "UNKNOWN",
+            "confidence": round(top_score, 3),
+            "confidence_tier": confidence_tier,
+            "candidates": candidates,
+            "whitelist_candidates": candidates,
+            "raw_ocr_text": str(best_observation.get("raw_text", " | ".join(unique_raw))),
+            "normalized_text": str(best_observation.get("normalized_text", "")),
+            "selection_reason": selection_reason,
+            "decision_source": decision_source,
+            "engine": "hybrid-ocr-whitelist",
+            "observed_strengths": strengths,
+        }
+
+    if (
+        single_letter_without_strength
+        and top_support_count < 4
+        and margin < max(settings.OCR_MIN_MARGIN * 0.5, 0.08)
+    ):
+        confidence_tier = "uncertain_manual_confirmation_required"
+        selection_reason = (
+            f"OCR repeatedly favored the short single-letter token '{top_code}',"
+            " but there was not enough surrounding evidence to trust it automatically."
+        )
+        decision_source = "ocr_suggestion_only"
+    elif top_exact and not single_letter_without_strength and top_score >= settings.OCR_HIGH_CONFIDENCE and (
         margin >= settings.OCR_MIN_MARGIN or second_exact == 0
     ):
         confidence_tier = "high_confidence_exact"
@@ -609,13 +831,27 @@ def predict_disc_class_ocr(roi_image: np.ndarray) -> Dict[str, object]:
     elif top_score >= settings.OCR_MIN_CONFIDENCE and (
         margin >= (settings.OCR_MIN_MARGIN * 0.35) or top_exact or int(top["support_count"]) >= 2
     ):
-        confidence_tier = "probable_match"
-        detected_code = top_code
-        selection_reason = (
-            f"Rotation voting and whitelist scoring favored '{top_code}' over nearby alternatives"
-            f"{strength_fragment}; manual confirmation is still required."
-        )
-        decision_source = "ocr+whitelist_correction"
+        if single_letter_without_strength and top_support_count < 5:
+            confidence_tier = "uncertain_manual_confirmation_required"
+            selection_reason = (
+                f"OCR favored the single-letter code '{top_code}',"
+                " but it still needs confirmation because no strength or longer label structure was recovered."
+            )
+            decision_source = "ocr_suggestion_only"
+        elif len(top_code) <= 2 and not top_exact and top_strength_hits == 0 and margin < settings.OCR_MIN_MARGIN:
+            confidence_tier = "uncertain_manual_confirmation_required"
+            selection_reason = (
+                f"OCR favored '{top_code}' only weakly over nearby short-code alternatives; manual confirmation is required."
+            )
+            decision_source = "ocr_suggestion_only"
+        else:
+            confidence_tier = "probable_match"
+            detected_code = top_code
+            selection_reason = (
+                f"Rotation voting and whitelist scoring favored '{top_code}' over nearby alternatives"
+                f"{strength_fragment}; manual confirmation is still required."
+            )
+            decision_source = "ocr+whitelist_correction"
     elif top_score >= settings.OCR_SUGGESTION_CONFIDENCE:
         confidence_tier = "uncertain_manual_confirmation_required"
         selection_reason = (

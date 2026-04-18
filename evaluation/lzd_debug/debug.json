@@ -1,0 +1,29 @@
+{
+  "disc_center_roi": [
+    448,
+    448
+  ],
+  "disc_radius_px": 56,
+  "max_radius_px": 447,
+  "gradient_strength": 97.242,
+  "edge_density": 0.4244,
+  "annular_diameter_px": 542.0,
+  "annular_confidence": 0.84,
+  "radial_diameter_px": 709.0,
+  "radial_confidence": 0.73,
+  "radial_spread_px": 151.478,
+  "radial_clipped_fraction": 0.0,
+  "contour_candidates": [],
+  "selected_candidates": [
+    {
+      "diameter_px": 542.0,
+      "confidence": 0.84,
+      "method": "annular-baseline"
+    },
+    {
+      "diameter_px": 709.0,
+      "confidence": 0.73,
+      "method": "radial-profile"
+    }
+  ]
+}

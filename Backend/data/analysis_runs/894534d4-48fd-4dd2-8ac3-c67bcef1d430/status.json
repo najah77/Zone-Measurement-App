@@ -1,0 +1,32 @@
+{
+  "analysis_id": "894534d4-48fd-4dd2-8ac3-c67bcef1d430",
+  "status": "completed",
+  "created_at": "2026-04-18 15:42:19.679976+00:00",
+  "updated_at": "2026-04-18 15:42:19.689888+00:00",
+  "image_filename": "WhatsApp Image 2026-02-09 at 5.48.44 AM.jpeg",
+  "message": "Analysis completed.",
+  "progress": 1.0,
+  "current_stage": "completed",
+  "error": null,
+  "result_available": true,
+  "timings": {
+    "image_decode_seconds": 0.037,
+    "image_resize_seconds": 0.0,
+    "analysis_scale": 1.0,
+    "plate_extraction_seconds": 1.597,
+    "quality_validation_seconds": 0.035,
+    "disc_detection_seconds": 1.565,
+    "calibration_seconds": 0.0,
+    "measurement_seconds": 14.698,
+    "ocr_seconds": 60.23,
+    "overlay_build_seconds": 0.002,
+    "panel_resolution_seconds": 0.0,
+    "result_serialization_seconds": 0.002,
+    "pipeline_seconds": 76.546,
+    "total_runtime_seconds": 78.225,
+    "storage_write_seconds": 0.009,
+    "total_runtime_with_persistence_seconds": 78.234
+  },
+  "status_url": "/api/analyze/894534d4-48fd-4dd2-8ac3-c67bcef1d430/status",
+  "result_url": "/api/analyze/894534d4-48fd-4dd2-8ac3-c67bcef1d430/result"
+}

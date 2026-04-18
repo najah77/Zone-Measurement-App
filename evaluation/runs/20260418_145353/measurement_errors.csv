@@ -1,0 +1,13 @@
+image_id,code,ground_truth_code,predicted_code,ground_truth_mm,predicted_mm,error_mm,abs_error_mm,label_confidence,measurement_confidence,review_required,no_zone_fallback_used
+1.1.1,AM,AM10,AM,22.0,20.2,-1.8,1.8,0.99,0.861,True,False
+1.1.1,AMC,AMC,AMC,22.0,30.07,8.07,8.07,0.99,0.84,True,False
+1.1.1,CAZ,CAZ,CAZ,28.0,11.94,-16.06,16.06,0.965,0.84,False,False
+1.1.1,CN,CN,CN,21.0,40.86,19.86,19.86,0.94,0.845,True,False
+1.1.1,ETP,ETP,ETP,38.0,17.79,-20.21,20.21,0.99,0.855,True,False
+1.1.1,FEP,FEP,FEP,36.0,21.81,-14.19,14.19,0.99,0.855,True,False
+1.1.1,FF,FF,FF,30.0,40.4,10.4,10.4,0.99,0.769,True,False
+1.1.1,FOX,FOX,FOX,26.0,22.49,-3.51,3.51,0.99,0.756,False,False
+1.1.1,MEM,MEM,MEM,34.0,17.22,-16.78,16.78,0.99,0.857,True,False
+1.1.1,PEF,PEF,PEF,28.0,18.48,-9.52,9.52,0.99,0.862,True,False
+1.1.1,SXT,SXT,SXT,30.0,18.25,-11.75,11.75,0.99,0.868,True,False
+1.1.1,TPZ,TPZ,TPZ,26.0,18.94,-7.06,7.06,0.936,0.846,True,False

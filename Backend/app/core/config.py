@@ -41,6 +41,9 @@ class Settings:
     DISC_DIAMETER_MM: float = 6.0
     MAX_DISCS: int = int(os.getenv("MAX_DISCS", "24"))
     ANALYSIS_WORKERS: int = int(os.getenv("ANALYSIS_WORKERS", "2"))
+    ANALYSIS_MAX_DIMENSION: int = int(os.getenv("ANALYSIS_MAX_DIMENSION", "1800"))
+    ZONE_PLATE_MASK_INSET_RATIO_CIRCLE: float = float(os.getenv("ZONE_PLATE_MASK_INSET_RATIO_CIRCLE", "0.93"))
+    ZONE_PLATE_MASK_INSET_RATIO_RECTANGLE: float = float(os.getenv("ZONE_PLATE_MASK_INSET_RATIO_RECTANGLE", "0.965"))
 
 
 settings = Settings()

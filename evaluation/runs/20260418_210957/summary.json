@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-04-18T18:15:29.683436+00:00",
+  "evaluated_image_count": 2,
+  "images_with_ground_truth": 2,
+  "source_counts": {
+    "dryad_sirscan": 2
+  },
+  "full_pass_count": 0,
+  "strict_fail_count": 2,
+  "analysis_status_breakdown": {
+    "REQUIRES_MANUAL_REVIEW": 2
+  },
+  "measurement_mae_mm": 13.8,
+  "measurement_max_abs_error_mm": 30.0,
+  "root_causes": {
+    "incorrect_no_zone_fallback": 2,
+    "zone_measurement_error": 2,
+    "zone_selection_underestimate": 2,
+    "image_quality_or_thresholding_issue": 1
+  }
+}

@@ -1,0 +1,11 @@
+image_id,source_group,provenance,analysis_status,predicted_disc_count,expected_disc_count,count_matches_ground_truth,matched_disc_count,measurement_mae_mm,measurement_max_abs_error_mm,missing_codes,unexpected_codes,review_required_count,failed_count,strict_failed,full_pass,root_causes,warnings
+1.1.1,dryad_sirscan,dryad_original,REQUIRES_MANUAL_REVIEW,16,16,True,16,9.44,24.0,,,16,0,True,False,incorrect_no_zone_fallback | zone_measurement_error,
+1.10.1,dryad_sirscan,dryad_original,REQUIRES_MANUAL_REVIEW,16,16,True,16,18.1,35.08,,,16,0,True,False,image_quality_or_thresholding_issue | zone_measurement_error,Glare or reflection detected on the plate. | Glare or reflection detected on the plate.
+1.2.1,dryad_sirscan,dryad_original,REQUIRES_MANUAL_REVIEW,16,16,True,16,11.41,22.0,,,16,0,True,False,zone_measurement_error,
+1.3.1,dryad_sirscan,dryad_original,REQUIRES_MANUAL_REVIEW,16,16,True,16,9.77,20.52,,,16,0,True,False,zone_measurement_error,
+1.4.1,dryad_sirscan,dryad_original,REQUIRES_MANUAL_REVIEW,16,16,True,16,12.78,22.11,,,16,0,True,False,image_quality_or_thresholding_issue | zone_measurement_error,Glare or reflection detected on the plate. | Glare or reflection detected on the plate.
+1.5.1,dryad_sirscan,dryad_original,REQUIRES_MANUAL_REVIEW,16,16,True,16,11.12,28.62,,,16,0,True,False,zone_measurement_error,
+1.6.1,dryad_sirscan,dryad_original,REQUIRES_MANUAL_REVIEW,16,16,True,16,15.12,36.06,,,16,0,True,False,incorrect_no_zone_fallback | zone_measurement_error,
+1.7.1,dryad_sirscan,dryad_original,REQUIRES_MANUAL_REVIEW,16,16,True,15,14.52,35.29,ETP,VA,16,0,True,False,image_quality_or_thresholding_issue | ocr_wrong_code | zone_measurement_error,Glare or reflection detected on the plate. | Glare or reflection detected on the plate.
+1.8.1,dryad_sirscan,dryad_original,REQUIRES_MANUAL_REVIEW,16,16,True,15,10.43,35.51,TOB,SXT,16,0,True,False,image_quality_or_thresholding_issue | ocr_wrong_code | zone_measurement_error,Glare or reflection detected on the plate. | Glare or reflection detected on the plate.
+1.9.1,dryad_sirscan,dryad_original,REQUIRES_MANUAL_REVIEW,16,16,True,16,11.68,21.06,,,16,0,True,False,image_quality_or_thresholding_issue | incorrect_no_zone_fallback | zone_measurement_error,Glare or reflection detected on the plate. | Glare or reflection detected on the plate.

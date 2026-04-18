@@ -5,6 +5,7 @@ import uuid
 from time import perf_counter
 from typing import Callable, Dict, Optional
 
+import cv2
 from fastapi import HTTPException
 
 from app.core.config import settings
@@ -19,6 +20,21 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 ProgressCallback = Callable[[float, str, str, Optional[Dict[str, float]]], None]
+
+
+def _downscale_for_analysis(image, max_dimension: int) -> tuple:
+    height, width = image.shape[:2]
+    longest_side = max(height, width)
+    if max_dimension <= 0 or longest_side <= max_dimension:
+        return image, 1.0
+
+    scale = max_dimension / float(longest_side)
+    resized = cv2.resize(
+        image,
+        (max(1, int(round(width * scale))), max(1, int(round(height * scale)))),
+        interpolation=cv2.INTER_AREA,
+    )
+    return resized, scale
 
 
 def run_ast_analysis(
@@ -53,6 +69,11 @@ def run_ast_analysis(
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     timings["image_decode_seconds"] = perf_counter() - started
+
+    started = perf_counter()
+    image, analysis_scale = _downscale_for_analysis(image, settings.ANALYSIS_MAX_DIMENSION)
+    timings["image_resize_seconds"] = perf_counter() - started
+    timings["analysis_scale"] = round(float(analysis_scale), 5)
 
     if progress_callback:
         progress_callback(0.18, "plate_extraction", "Detecting the plate area.", timings.copy())

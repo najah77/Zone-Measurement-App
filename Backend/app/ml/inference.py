@@ -24,7 +24,7 @@ from app.utils.calibration import build_calibration, pixels_to_mm
 from app.utils.disc_detector import detect_discs
 from app.utils.disc_roi import extract_disc_roi
 from app.utils.measurement import apply_no_zone_rule, calculate_inhibition_result
-from app.utils.zone_detector import measure_zone
+from app.utils.zone_detector import build_disc_assignment_masks, measure_zone
 
 logger = logging.getLogger(__name__)
 ProgressCallback = Callable[[float, str, str, Optional[Dict[str, float]]], None]
@@ -107,7 +107,7 @@ def hybrid_analysis_pipeline(
     timings = stage_timings if stage_timings is not None else {}
 
     started = perf_counter()
-    discs = detect_discs(image)
+    discs = detect_discs(image, plate_detection=plate_detection)
     timings["disc_detection_seconds"] = perf_counter() - started
     if progress_callback:
         progress_callback(
@@ -143,13 +143,21 @@ def hybrid_analysis_pipeline(
     ocr_total = 0.0
     overlay_total = 0.0
     total_discs = len(discs)
+    dense_zone_masks: List[np.ndarray] | None = None
+    if plate_detection and plate_detection.shape == "rectangle" and total_discs >= 8:
+        dense_zone_masks = build_disc_assignment_masks(image.shape, discs, plate_detection=plate_detection)
 
     for index, disc in enumerate(discs, start=1):
         x, y, radius = disc
         disc_diameter_px = round(radius * 2.0, 2)
 
         measurement_started = perf_counter()
-        zone_result = measure_zone(image, disc)
+        zone_result = measure_zone(
+            image,
+            disc,
+            plate_detection=plate_detection,
+            extra_valid_mask=dense_zone_masks[index - 1] if dense_zone_masks and (index - 1) < len(dense_zone_masks) else None,
+        )
         measurement_total += perf_counter() - measurement_started
         auto_diameter_px = float(zone_result["diameter_px"])
         auto_diameter_mm = calculate_inhibition_result(
@@ -162,8 +170,18 @@ def hybrid_analysis_pipeline(
             auto_diameter_mm = apply_no_zone_rule(auto_diameter_mm)
 
         ocr_started = perf_counter()
-        crop = extract_disc_roi(image, x, y, radius, expand_ratio=0.24, mask_scale=0.8)
+        crop = extract_disc_roi(image, x, y, radius, expand_ratio=0.24, mask_scale=0.82)
+        relaxed_crop = extract_disc_roi(image, x, y, radius, expand_ratio=0.3, mask_scale=0.98)
         label_prediction = predict_disc_class_ocr(crop)
+        if (
+            (
+                str(label_prediction.get("confidence_tier", "")) != "high_confidence_exact"
+                and float(label_prediction.get("confidence", 0.0)) < 0.97
+            )
+            or str(label_prediction.get("code", "UNKNOWN")).upper() == "UNKNOWN"
+            or len(str(label_prediction.get("code", ""))) <= 1
+        ):
+            label_prediction = predict_disc_class_ocr(crop, fallback_images=[relaxed_crop])
         ocr_total += perf_counter() - ocr_started
         detected_code = str(label_prediction.get("code", "UNKNOWN")).upper()
         label_confidence = float(label_prediction.get("confidence", 0.0))

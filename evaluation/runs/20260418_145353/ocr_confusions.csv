@@ -1,0 +1,5 @@
+image_id,predicted_code,likely_expected_code,raw_ocr_text,normalized_ocr_text,candidates
+1.1.1,CFM,CIP,CP | 5,CP 5,CFM | DO | NOR | OFX | FOS
+1.1.1,CN,CPD,CN | 10,CN 10,CN | DO | NOR | CPD | AM
+1.1.1,OFX,CRO,OF | A5,OF 5,OFX | FOS | P | DO | CN
+1.1.1,P,F100,P,P,P | SAM | STR | SXT

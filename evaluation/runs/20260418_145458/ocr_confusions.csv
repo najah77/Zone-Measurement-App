@@ -1,0 +1,60 @@
+image_id,predicted_code,likely_expected_code,raw_ocr_text,normalized_ocr_text,candidates
+1.1.1,CFM,CIP,CP | 5,CP 5,CFM | DO | NOR | OFX | FOS
+1.1.1,CN,CPD,CN | 10,CN 10,CN | DO | NOR | CPD | AM
+1.1.1,OFX,CRO,OF | A5,OF 5,OFX | FOS | P | DO | CN
+1.1.1,P,F100,P,P,P | SAM | STR | SXT
+1.10.1,AK,CN,AK | 30,AK 30,AMK | AK | FF | P | AMC
+1.10.1,DO,AMC,OQ,OQ,DO | OFX | TOB | AK | AM
+1.10.1,P,PEF,WS |  | P,WS,P | SAM | STR | SXT | AK
+1.10.1,P,CIP,WS |  | P,WS,P | SAM | STR | SXT | AK
+1.10.1,P,ETP,WS |  | P,WS,P | SAM | STR | SXT | AK
+1.10.1,TE,TOB,TI,TI,TE | AM | AK | SXT | DO
+1.2.1,CLI,CIP,2 |  | CS5 |  | V,CSS 2,CLI | VA | FOS | TE | CN
+1.2.1,P,AM,P | Y,P,P | CN | FOS | DO | AM
+1.2.1,P,CPD,P | Y,P,P | CN | FOS | DO | AM
+1.2.1,TE,F100,EE,EE,TE | P | CN | DO | SAM
+1.3.1,FF,CN,EF,EF,FF | MIN | CFM | TE | CFX
+1.3.1,NOR,CIP,OO | NO,OO,NOR | DO | CN | FF | OFX
+1.3.1,P,FEP,P,P,P
+1.3.1,P,CRO,P,P,P
+1.3.1,P,FOX,P,P,P
+1.4.1,CN,AM,CP | 10,CP 10,CN | CPD | DO | AM | FF
+1.4.1,CN,CIP,CP | 10,CP 10,CN | CPD | DO | AM | FF
+1.4.1,P,PEF,S |  | C |  | 4 |  | P,S,P | FOS | FF | NET | PEF
+1.4.1,P,FEP,S |  | C |  | 4 |  | P,S,P | FOS | FF | NET | PEF
+1.4.1,P,AMC,S |  | C |  | 4 |  | P,S,P | FOS | FF | NET | PEF
+1.4.1,SAM,CPD,2QN | OL,ZQN 20,SAM | CN | P | DO | VA
+1.4.1,VA,CRO,P | VA,P,VA | STR | CN | TOB | NOR
+1.5.1,DO,CN,0O |  | 18 |  | S,OO,DO | P | CPD | DOR | PIP
+1.5.1,OFX,CIP,OF | 5,OF 5,OFX | DO | AM | AK | FF
+1.6.1,DO,CRO,O0,OO,DO | DOR | P | SAM | STR
+1.6.1,STR,AMC,S7,ST,STR | VA | P | TE | TGC
+1.7.1,CLI,CAZ,W 4 7 | F | BPAL8 |  | 2,W 2,CLI | FF | AM | AK | VA
+1.7.1,DO,AK,OO,OO,DO | VA | CN | P | FF
+1.7.1,P,PEF,P,P,P | NAL | CFM | OFX | NET
+1.7.1,P,CIP,P,P,P | NAL | CFM | OFX | NET
+1.7.1,P,ETP,P,P,P | NAL | CFM | OFX | NET
+1.7.1,P,FEP,P,P,P | NAL | CFM | OFX | NET
+1.7.1,P,AMC,P,P,P | NAL | CFM | OFX | NET
+1.7.1,P,CPD,P,P,P | NAL | CFM | OFX | NET
+1.7.1,P,CRO,P,P,P | NAL | CFM | OFX | NET
+1.7.1,TE,TOB,EE,EE,TE | SAM | STR | GEN | DO
+1.8.1,AM,AK,S | AN | XN B,S,AM | P | CN | AK | AMC
+1.8.1,AM,AMC,S | AN | XN B,S,AM | P | CN | AK | AMC
+1.8.1,P,PEF,3 AS | 4 |  | MY | SF P,AS,P | AM | AK | SAM | NET
+1.8.1,P,CIP,3 AS | 4 |  | MY | SF P,AS,P | AM | AK | SAM | NET
+1.8.1,P,ETP,3 AS | 4 |  | MY | SF P,AS,P | AM | AK | SAM | NET
+1.8.1,P,FEP,3 AS | 4 |  | MY | SF P,AS,P | AM | AK | SAM | NET
+1.8.1,P,CAZ,3 AS | 4 |  | MY | SF P,AS,P | AM | AK | SAM | NET
+1.8.1,P,CPD,3 AS | 4 |  | MY | SF P,AS,P | AM | AK | SAM | NET
+1.8.1,P,CRO,3 AS | 4 |  | MY | SF P,AS,P | AM | AK | SAM | NET
+1.8.1,P,FOX,3 AS | 4 |  | MY | SF P,AS,P | AM | AK | SAM | NET
+1.8.1,P,MEM,3 AS | 4 |  | MY | SF P,AS,P | AM | AK | SAM | NET
+1.8.1,P,SXT,3 AS | 4 |  | MY | SF P,AS,P | AM | AK | SAM | NET
+1.8.1,P,TOB,3 AS | 4 |  | MY | SF P,AS,P | AM | AK | SAM | NET
+1.8.1,P,TPZ,3 AS | 4 |  | MY | SF P,AS,P | AM | AK | SAM | NET
+1.9.1,P,PEF,A |  | TOSEWOEF |  | WOKE |  | P |  | SS |  | F,A,P | AM | TGC | ERY | MOX
+1.9.1,P,CIP,A |  | TOSEWOEF |  | WOKE |  | P |  | SS |  | F,A,P | AM | TGC | ERY | MOX
+1.9.1,P,ETP,A |  | TOSEWOEF |  | WOKE |  | P |  | SS |  | F,A,P | AM | TGC | ERY | MOX
+1.9.1,P,FEP,A |  | TOSEWOEF |  | WOKE |  | P |  | SS |  | F,A,P | AM | TGC | ERY | MOX
+1.9.1,TE,TOB,3 | IE,IE,TE | LEV | VA | CN | P

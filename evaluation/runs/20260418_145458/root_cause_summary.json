@@ -1,0 +1,8 @@
+{
+  "ocr_wrong_code": 10,
+  "zone_measurement_error": 9,
+  "image_quality_or_thresholding_issue": 5,
+  "missed_discs": 7,
+  "zone_selection_underestimate": 3,
+  "false_positive_discs": 2
+}

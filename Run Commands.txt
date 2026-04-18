@@ -1,3 +1,5 @@
+LOCAL :
+
 python -m venv venv
 venv\Scripts\activate
 pip install -r requirements.txt
@@ -7,6 +9,9 @@ venv\Scripts\python.exe -m uvicorn app.main:app --reload
 flutter run --dart-define=BACKEND_BASE_URL=http://127.0.0.1:8000
 
 
+
+UAT :
+
 2 terminals in backend : 
 venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 cloudflared tunnel --url http://127.0.0.1:8000
@@ -15,4 +20,4 @@ cloudflared tunnel --url http://127.0.0.1:8000
 cd C:\Users\najah\Desktop\Zone_Measurement_App\frontend
 flutter clean
 flutter pub get
-flutter build apk --release --dart-define=BACKEND_BASE_URL=https://platform-prisoner-articles-morrison.trycloudflare.com
+flutter build apk --release --dart-define=BACKEND_BASE_URL=https://walks-interview-establishment-paste.trycloudflare.com

@@ -5,12 +5,13 @@ from typing import Optional, Tuple
 import cv2
 import numpy as np
 
-from app.models.schemas import PlateDetection, Point
+from app.models.schemas import BoundingBox, PlateDetection, Point
 
 PlateCircle = Tuple[float, float, float, str]
+PlateRectangle = Tuple[float, float, float, float, str]
 
 
-def _resize_for_detection(image: np.ndarray, max_dimension: int = 1400) -> tuple[np.ndarray, float]:
+def _resize_for_detection(image: np.ndarray, max_dimension: int = 1600) -> tuple[np.ndarray, float]:
     height, width = image.shape[:2]
     longest_side = max(height, width)
     if longest_side <= max_dimension:
@@ -113,6 +114,108 @@ def _detect_plate_from_hough(image: np.ndarray) -> Optional[PlateCircle]:
     return best_candidate
 
 
+def _rectangular_candidate_score(
+    contour: np.ndarray,
+    bbox: tuple[int, int, int, int],
+    image_shape: tuple[int, int],
+) -> float:
+    x, y, w, h = bbox
+    image_height, image_width = image_shape
+    image_area = float(image_height * image_width)
+    bbox_area = float(w * h)
+    contour_area = float(cv2.contourArea(contour))
+    if bbox_area <= 0 or image_area <= 0:
+        return float("-inf")
+
+    coverage = bbox_area / image_area
+    fill_ratio = contour_area / bbox_area
+    aspect = min(w, h) / max(w, h)
+    margins = (
+        x / max(1.0, image_width),
+        y / max(1.0, image_height),
+        (image_width - (x + w)) / max(1.0, image_width),
+        (image_height - (y + h)) / max(1.0, image_height),
+    )
+    if any(margin <= 0.003 for margin in margins):
+        return float("-inf")
+    if any(margin >= 0.22 for margin in margins):
+        return float("-inf")
+    margin_balance = 1.0 - float(np.std(margins) * 3.0)
+    return (coverage * 220.0) + (fill_ratio * 65.0) + (aspect * 22.0) + (margin_balance * 8.0)
+
+
+def _detect_plate_from_rectangle(image: np.ndarray) -> Optional[PlateRectangle]:
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) if image.ndim == 3 else image.copy()
+    resized, scale = _resize_for_detection(gray)
+    enhanced = cv2.createCLAHE(clipLimit=2.4, tileGridSize=(8, 8)).apply(resized)
+    blurred = cv2.GaussianBlur(enhanced, (7, 7), 0)
+    edges = cv2.Canny(blurred, 28, 92)
+    edges = cv2.dilate(edges, np.ones((5, 5), dtype=np.uint8), iterations=2)
+    edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, np.ones((9, 9), dtype=np.uint8))
+
+    contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    if not contours:
+        return None
+
+    best_candidate: Optional[tuple[int, int, int, int]] = None
+    best_score = float("-inf")
+    image_shape = resized.shape[:2]
+    for contour in contours:
+        if len(contour) < 4:
+            continue
+        x, y, w, h = cv2.boundingRect(contour)
+        if min(w, h) < min(image_shape) * 0.6:
+            continue
+        if (w * h) < (image_shape[0] * image_shape[1] * 0.5):
+            continue
+
+        perimeter = cv2.arcLength(contour, True)
+        if perimeter <= 0:
+            continue
+        approx = cv2.approxPolyDP(contour, 0.03 * perimeter, True)
+        if len(approx) > 10:
+            continue
+
+        score = _rectangular_candidate_score(contour, (x, y, w, h), image_shape)
+        if score > best_score:
+            best_score = score
+            best_candidate = (x, y, w, h)
+
+    if best_candidate is None:
+        return _detect_border_framed_plate(image)
+
+    x, y, w, h = best_candidate
+    x1, y1, x2, y2 = float(x), float(y), float(x + w), float(y + h)
+    if scale != 1.0:
+        inv_scale = 1.0 / scale
+        return x1 * inv_scale, y1 * inv_scale, x2 * inv_scale, y2 * inv_scale, "rectangle-contour"
+    return x1, y1, x2, y2, "rectangle-contour"
+
+
+def _detect_border_framed_plate(image: np.ndarray) -> Optional[PlateRectangle]:
+    height, width = image.shape[:2]
+    aspect = width / max(1.0, height)
+    if not (0.88 <= aspect <= 1.12):
+        return None
+
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) if image.ndim == 3 else image.copy()
+    enhanced = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8)).apply(gray)
+    edges = cv2.Canny(cv2.GaussianBlur(enhanced, (5, 5), 0), 32, 96)
+
+    band = max(12, int(round(min(height, width) * 0.045)))
+    top = edges[:band, :]
+    bottom = edges[height - band :, :]
+    left = edges[:, :band]
+    right = edges[:, width - band :]
+    border_density = float(np.mean([np.mean(top > 0), np.mean(bottom > 0), np.mean(left > 0), np.mean(right > 0)]))
+    if border_density < 0.055:
+        return None
+
+    inset_x = max(8.0, width * 0.02)
+    inset_y = max(8.0, height * 0.02)
+    return inset_x, inset_y, width - inset_x, height - inset_y, "rectangle-border-fallback"
+
+
 def _detect_plate_from_contour(image: np.ndarray) -> Optional[PlateCircle]:
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) if image.ndim == 3 else image.copy()
     blurred = cv2.GaussianBlur(gray, (9, 9), 0)
@@ -162,6 +265,12 @@ def detect_plate_circle(image: np.ndarray, yolo_bbox: Optional[tuple] = None) ->
     return _detect_plate_from_contour(image)
 
 
+def detect_plate_rectangle(image: np.ndarray) -> Optional[PlateRectangle]:
+    if image is None or image.size == 0:
+        return None
+    return _detect_plate_from_rectangle(image)
+
+
 def build_plate_mask(
     image: np.ndarray,
     plate_circle: Optional[tuple[float, float, float]] = None,
@@ -184,6 +293,44 @@ def build_plate_mask(
     return mask
 
 
+def _circle_area(circle: PlateCircle) -> float:
+    return float(np.pi * (circle[2] ** 2))
+
+
+def _rectangle_area(rectangle: PlateRectangle) -> float:
+    return max(0.0, (rectangle[2] - rectangle[0]) * (rectangle[3] - rectangle[1]))
+
+
+def _choose_plate_region(image: np.ndarray, yolo_bbox: Optional[tuple] = None) -> tuple[str, PlateCircle | PlateRectangle | None]:
+    rectangle = detect_plate_rectangle(image)
+    if rectangle is not None:
+        image_area = float(image.shape[0] * image.shape[1])
+        rectangle_coverage = _rectangle_area(rectangle) / max(1.0, image_area)
+        if rectangle_coverage >= 0.82:
+            return "rectangle", rectangle
+    circle = detect_plate_circle(image, yolo_bbox=yolo_bbox)
+    if rectangle is None:
+        return "circle", circle
+    if circle is None:
+        return "rectangle", rectangle
+
+    image_area = float(image.shape[0] * image.shape[1])
+    rectangle_coverage = _rectangle_area(rectangle) / max(1.0, image_area)
+    circle_coverage = _circle_area(circle) / max(1.0, image_area)
+    circle_near_edge = (
+        circle[0] - circle[2] <= image.shape[1] * 0.02
+        or circle[1] - circle[2] <= image.shape[0] * 0.02
+        or circle[0] + circle[2] >= image.shape[1] * 0.98
+        or circle[1] + circle[2] >= image.shape[0] * 0.98
+    )
+
+    if rectangle_coverage >= 0.5 and (
+        rectangle_coverage > (circle_coverage * 1.18) or circle_near_edge or circle[2] < min(image.shape[:2]) * 0.42
+    ):
+        return "rectangle", rectangle
+    return "circle", circle
+
+
 def extract_plate(
     image: np.ndarray,
     yolo_bbox: Optional[tuple] = None,
@@ -191,12 +338,53 @@ def extract_plate(
     if image is None or image.size == 0:
         return image, None
 
-    detected = detect_plate_circle(image, yolo_bbox=yolo_bbox)
+    shape, detected = _choose_plate_region(image, yolo_bbox=yolo_bbox)
     if detected is None:
         return image, None
 
-    cx, cy, radius, method = detected
     height, width = image.shape[:2]
+    warnings: list[str] = []
+
+    if shape == "rectangle":
+        x1, y1, x2, y2, method = detected
+        rect_width = x2 - x1
+        rect_height = y2 - y1
+        pad_x = rect_width * 0.015
+        pad_y = rect_height * 0.015
+        crop_x1 = max(0, int(round(x1 + pad_x)))
+        crop_y1 = max(0, int(round(y1 + pad_y)))
+        crop_x2 = min(width, int(round(x2 - pad_x)))
+        crop_y2 = min(height, int(round(y2 - pad_y)))
+        cropped = image[crop_y1:crop_y2, crop_x1:crop_x2].copy()
+        if cropped.size == 0:
+            cropped = image
+            crop_x1, crop_y1, crop_x2, crop_y2 = 0, 0, width, height
+
+        margins = (
+            x1 / max(1.0, width),
+            y1 / max(1.0, height),
+            (width - x2) / max(1.0, width),
+            (height - y2) / max(1.0, height),
+        )
+        min_margin = min(margins)
+        clip_fraction = max(0.0, 0.012 - min_margin)
+        clipped = min_margin < 0.012
+        if clipped:
+            warnings.append("Plate touches the image border.")
+
+        detection = PlateDetection(
+            center=Point(x=round((x1 + x2) / 2.0, 2), y=round((y1 + y2) / 2.0, 2)),
+            radius_px=round(min(rect_width, rect_height) / 2.0, 2),
+            shape="rectangle",
+            bounding_box=BoundingBox(x1=round(x1, 2), y1=round(y1, 2), x2=round(x2, 2), y2=round(y2, 2)),
+            clipped=clipped,
+            clip_fraction=round(float(clip_fraction), 4),
+            method=method,
+            warnings=warnings,
+        )
+        return cropped, detection
+
+    cx, cy, radius, method = detected
     margin = int(round(radius * 1.03))
     x1 = max(0, int(round(cx - margin)))
     y1 = max(0, int(round(cy - margin)))
@@ -222,7 +410,6 @@ def extract_plate(
         clipped_pixels += int(max(0.0, (cy + margin) - height))
 
     clip_fraction = float(clipped_pixels) / max(1.0, radius * 4.0)
-    warnings: list[str] = []
     clipped = clip_fraction > 0.025
     if clipped:
         warnings.append("Plate touches the image border.")
@@ -230,6 +417,7 @@ def extract_plate(
     detection = PlateDetection(
         center=Point(x=round(cx, 2), y=round(cy, 2)),
         radius_px=round(radius, 2),
+        shape="circle",
         clipped=clipped,
         clip_fraction=round(clip_fraction, 4),
         method=method,

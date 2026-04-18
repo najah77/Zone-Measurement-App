@@ -1,0 +1,39 @@
+image_id,predicted_code,likely_expected_code,raw_ocr_text,normalized_ocr_text,candidates
+1.1.1,DO,CRO,DO,DO,DO | DOR | CAZ | P | MEM
+1.1.1,P,AMC,P,P,P | CTX | PIP | LEV | POL
+1.1.1,P,CPD,P,P,P | CTX | PIP | LEV | POL
+1.1.1,P,MEM,P,P,P | CTX | PIP | LEV | POL
+1.1.1,P,F100,P,P,P | CTX | PIP | LEV | POL
+1.10.1,P,CN,O | P | 4,O,P | AK | DO | TE | VA
+1.10.1,P,CIP,O | P | 4,O,P | AK | DO | TE | VA
+1.10.1,P,FOX,O | P | 4,O,P | AK | DO | TE | VA
+1.10.1,P,TOB,O | P | 4,O,P | AK | DO | TE | VA
+1.10.1,P,TPZ,O | P | 4,O,P | AK | DO | TE | VA
+1.2.1,AM,CIP,AM | 10,AM 10,AM | P | AMP | DO | VA
+1.2.1,COL,CPD,CO,CO,COL | CRO | PEF | CAZ | VA
+1.2.1,VA,F100,I | 4 VA,I,VA | CIP | RIF | PIP | P
+1.3.1,P,CRO,Y | P,Y,P
+1.3.1,P,TPZ,Y | P,Y,P
+1.3.1,UNKNOWN,F100,P,P,P
+1.4.1,FF,PEF,FF | WZ,FF,FF | PIP | DO | COL | AM
+1.4.1,GAT,AMC,AT,AT,GAT | GEN | ATM | AM | AK
+1.4.1,NOR,CAZ,NO,NO,NOR | STR | SXT | CRO | PEF
+1.4.1,P,CRO,SS | P | 2,SS 2,P | FOS | CLI | SAM | STR
+1.4.1,UNKNOWN,F100,F,F,P | PIP | TE | FF | SAM
+1.5.1,AM,CIP,AM | 10,AM 10,AM | AMP | P | AMC | AMK
+1.5.1,CN,CPD,N | CN,N,CN | NOR | COL | POL | MOX
+1.5.1,OFX,CRO,OF | 5,OF 5,OFX | POL | CFM | NIT | COL
+1.5.1,VA,SXT,V4,VA,VA | CAZ | KAN | NAL | SAM
+1.5.1,VA,F100,V4,VA,VA | CAZ | KAN | NAL | SAM
+1.6.1,AM,AMC,AM | 10,AM 10,AM | AMP | MEM | ETP | FEP
+1.6.1,DO,CRO,DO,DO,DO | DOR | STR | OFX | SXT
+1.6.1,P,CIP,P,P,P | DO | ATM | DOR | AM10
+1.6.1,UNKNOWN,F100,F0,FO,FOS | NAL | NOR | FOX | DOR
+1.7.1,P,ETP,S |  | 4 |  | YD |  | P,S,P | PIP | ERY | FF | VA
+1.7.1,P,CPD,S |  | 4 |  | YD |  | P,S,P | PIP | ERY | FF | VA
+1.7.1,VA,CRO,VA,VA,VA | TPZ | AM | AK | CN
+1.8.1,P,AM,P | IN,P,P | PEF | STR | SXT | FEP
+1.8.1,P,PEF,P | IN,P,P | PEF | STR | SXT | FEP
+1.8.1,TE,TOB,TE,TE,TE | ATM | DO | TEC | GAT
+1.8.1,VA,CIP,5 | V4 Y,VA 5,VA | FEP | FF | P | GAT
+1.9.1,P,CAZ,P,P,P | GAT | RIF | ERY | PEF
